@@ -17,34 +17,22 @@
         {
             this._obj = Obj;
 
+            string clone = Obj.ToString();
+            var index = clone.IndexOf("(Clone)");
+            this._name = clone.Substring(0, index);
+
             if (Obj is StructureMaster)
             {
                 this._ownerid = (Obj as StructureMaster).ownerID;
-                this._name = "Structure Master";
             }
-
             if (Obj is StructureComponent)
             {
                 this._ownerid = (Obj as StructureComponent)._master.ownerID;
-                string clone = this.GetObject<StructureComponent>().ToString();
-                var index = clone.IndexOf("(Clone)");
-                this._name = clone.Substring(0, index);
             }
             if (Obj is DeployableObject)
             {
                 this._ownerid = (Obj as DeployableObject).ownerID;
-                string clone = this.GetObject<DeployableObject>().ToString();
-                if (clone.Contains("Barricade"))
-                {
-                    this._name = "Wood Barricade";
-                }
-                else
-                {
-                    var index = clone.IndexOf("(Clone)");
-                    this._name = clone.Substring(0, index);
-                }
                 var deployable = Obj as DeployableObject;
-
                 var inventory = deployable.GetComponent<Inventory>();
                 if (inventory != null)
                 {
@@ -59,9 +47,7 @@
             else if (Obj is SupplyCrate)
             {
                 this._ownerid = 76561198095992578UL;
-                this._name = "Supply Crate";
-                var crate = Obj as SupplyCrate;
-                var inventory = crate.lootableObject._inventory;
+                var inventory = (Obj as SupplyCrate).lootableObject._inventory;
                 if (inventory != null)
                 {
                     this.hasInventory = true;
@@ -313,6 +299,9 @@
         {
             get
             {
+                if (ItemByClone.ContainsKey(this._name))
+                    return ItemByClone[this._name];
+
                 return this._name;
             }
         }
@@ -374,5 +363,16 @@
                 return this.Location.z;
             }
         }
+
+        private static readonly IDictionary<string, string> ItemByClone = new Dictionary<string, string>()
+        {
+            { "Barricade_Fence_Deployable", "Barricade Fence" }, { "Campfire", "Camp Fire" }, { "LargeWoodSpikeWall", "Large Spike Wall" }, { "MetalCeiling", "Metal Ceiling" },
+            { "MetalDoor", "Metal Door" }, { "MetalDoorFrame", "Metal Doorway" }, { "MetalFoundation", "Metal Foundation" }, { "MetalPillar", "Metal Pillar" }, { "MetalRamp", "Metal Ramp" },
+            { "MetalStairs", "Metal Stairs" }, { "MetalWall", "Metal Wall" }, { "MetalBarsWindow", "Metal Window Bars" }, { "MetalWindow", "Metal Window" }, { "RepairBench", "Repair Bench" },
+            { "SingleBed", "Bed" }, { "SleepingBagA", "Sleeping Bag" }, { "StructureMaster", "Structure Master" }, { "SupplySignal", "Supply Signal" }, { "WoodBox", "Wood Storage Box" },
+            { "WoodBoxLarge", "Large Wood Storage" }, { "WoodCeiling", "Wood Ceiling" }, { "WoodDoorFrame", "Wood Doorway" }, { "WoodFoundation", "Wood Foundation" }, { "WoodGate", "Wood Gate" },
+            { "WoodGateway", "Wood Gateway"}, { "WoodPillar", "Wood Pillar" }, { "WoodRamp", "Wood Ramp" }, { "Wood_Shelter", "Wood Shelter" }, { "WoodStairs", "Wood Stairs" },
+            { "WoodBoxLarge", "Large Wood Storage" }, { "WoodWall", "Wood Wall" }, { "WoodWindow", "Wood Window" }, { "WoodenDoor", "Wooden Door" }, { "WoodSpikeWall", "Spike Wall" },
+        };
     }
 }
