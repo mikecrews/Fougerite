@@ -410,17 +410,25 @@
         public static bool PlayerKilled(ref DamageEvent de)
         {
             bool flag = false;
+            DeathEvent event2 = null;
             try
             {
-                DeathEvent event2 = new DeathEvent(ref de);
-                flag = event2.DropItems;
-                if (OnPlayerKilled != null)
-                    OnPlayerKilled(event2);
-
+                event2 = new DeathEvent(ref de);
                 flag = event2.DropItems;
             }
-            catch { }
- 
+            catch
+            { 
+                return flag;
+            }
+            if (OnPlayerKilled != null && event2 != null)
+            {
+                try
+                {
+                    OnPlayerKilled(event2);
+                    flag = event2.DropItems;
+                }
+                catch { }
+            }
             return flag;
         }
 
