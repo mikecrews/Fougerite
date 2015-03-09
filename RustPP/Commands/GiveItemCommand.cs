@@ -13,7 +13,7 @@
             string usage = "Give Item usage:  /give  playerName  itemName  (quantity)";
             if (ChatArguments.Length < 2) // minimum arguments = 2
             {
-                Util.sayUser(Arguments.argUser.networkPlayer, Core.Name, usage);
+                Util.sayUser(Arguments.argUser.networkPlayer, RustPP.Core.Name, usage);
                 return;
             }
 
@@ -55,7 +55,7 @@
             } 
             else if (ChatArguments.Length < 3) // qty given, but there is < 3 arguments => invalid
             {
-                Util.sayUser(Arguments.argUser.networkPlayer, Core.Name, usage);
+                Util.sayUser(Arguments.argUser.networkPlayer, RustPP.Core.Name, usage);
                 return;
             }
 
@@ -98,10 +98,10 @@
             Logger.LogDebug(string.Format("[GiveItemCommand] quantity={0} item={1} recipient={2}", quantity, itemName, recipName));
 
             inv.giveplayer(ref Arguments);
-            Util.sayUser(Arguments.argUser.networkPlayer, Core.Name, string.Format("{0}  {1} were placed in {2}'s inventory.", quantity, itemName, recipName));
+            Util.sayUser(Arguments.argUser.networkPlayer, RustPP.Core.Name, string.Format("{0}  {1} were placed in {2}'s inventory.", quantity, itemName, recipName));
 
             uLink.NetworkPlayer recipPlayer = Fougerite.Player.FindByName(recipName).PlayerClient.netPlayer;
-            Util.sayUser(recipPlayer, Core.Name, string.Format("{0} gave you  {1}  {2}", Arguments.argUser.displayName, qty.ToString(), itemName));
+            Util.sayUser(recipPlayer, RustPP.Core.Name, string.Format("{0} gave you  {1}  {2}", Arguments.argUser.displayName, qty.ToString(), itemName));
         }
     }
 }

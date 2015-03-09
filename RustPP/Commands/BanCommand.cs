@@ -11,79 +11,66 @@
     {
         public override void Execute(ref ConsoleSystem.Arg Arguments, ref string[] ChatArguments)
         {
-            string playerName = string.Join(" ", ChatArguments).Trim(new char[] { ' ', '"' });
-            if (playerName == string.Empty)
+            string queryName = Arguments.ArgsStr.Trim(new char[] { ' ', '"' });
+            if (queryName == string.Empty)
             {
-                Util.sayUser(Arguments.argUser.networkPlayer, Core.Name, "Ban Usage:  /ban playerName");
+                Util.sayUser(Arguments.argUser.networkPlayer, RustPP.Core.Name, "Ban Usage:  /ban playerName");
                 return;
             }
-            PList list = new PList();
-            list.Add(0, "Cancel");
-            foreach (KeyValuePair<ulong, string> entry in Core.userCache)
+
+            var query = from entry in RustPP.Core.userCache
+                        let sim = entry.Value.Similarity(queryName)
+                        where sim > 0.4d
+                        group new PList.Player(entry.Key, entry.Value) by sim into matches
+                        select matches.FirstOrDefault();
+
+            if (query.Count() == 1)
             {
-                if (entry.Value.Equals(playerName, StringComparison.OrdinalIgnoreCase))
-                {
-                    BanPlayer(new PList.Player(entry.Key, entry.Value), Arguments.argUser);
-                    return;
-                } else if (entry.Value.ToUpperInvariant().Contains(playerName.ToUpperInvariant()))
-                    list.Add(entry.Key, entry.Value);
+                BanPlayer(query.First(), Arguments.argUser);
+                return;
             }
-            if (list.Count == 1)
+            else
             {
-                foreach (PlayerClient client in PlayerClient.All)
+                Util.sayUser(Arguments.argUser.networkPlayer, RustPP.Core.Name, string.Format("{0}  players match  {2}: ", query.Count(), queryName));
+                for (int i = 1; i < query.Count(); i++)
                 {
-                    if (client.netUser.displayName.Equals(playerName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        BanPlayer(new PList.Player(client.netUser.userID, client.netUser.displayName), Arguments.argUser);
-                        return;
-                    } else if (client.netUser.displayName.ToUpperInvariant().Contains(playerName.ToUpperInvariant()))
-                        list.Add(new PList.Player(client.netUser.userID, client.netUser.displayName));
+                    Util.sayUser(Arguments.argUser.networkPlayer, RustPP.Core.Name, string.Format("{0} - {1}", i, query.ElementAt(i).DisplayName));
                 }
+                Util.sayUser(Arguments.argUser.networkPlayer, RustPP.Core.Name, "0 - Cancel");
+                Util.sayUser(Arguments.argUser.networkPlayer, RustPP.Core.Name, "Please enter the number matching the player to ban.");
+                RustPP.Core.banWaitList[Arguments.argUser.userID] = query;
             }
-            if (list.Count == 1)
-            {
-                Util.sayUser(Arguments.argUser.networkPlayer, Core.Name, "No player matches the name: " + playerName);
-                return;
-            }
-            Util.sayUser(Arguments.argUser.networkPlayer, Core.Name, string.Format("{0}  player{1} {2}: ", ((list.Count - 1)).ToString(), (((list.Count - 1) > 1) ? "s match" : " matches"), playerName));
-            for (int i = 1; i < list.Count; i++)
-            {
-                Util.sayUser(Arguments.argUser.networkPlayer, Core.Name, string.Format("{0} - {1}", i, list.PlayerList[i].DisplayName));
-            }
-            Util.sayUser(Arguments.argUser.networkPlayer, Core.Name, "0 - Cancel");
-            Util.sayUser(Arguments.argUser.networkPlayer, Core.Name, "Please enter the number matching the player to ban.");
-            Core.banWaitList[Arguments.argUser.userID] = list;
         }
 
         public void PartialNameBan(ref ConsoleSystem.Arg Arguments, int id)
         {
             if (id == 0)
             {
-                Util.sayUser(Arguments.argUser.networkPlayer, Core.Name, "Cancelled!");
+                Util.sayUser(Arguments.argUser.networkPlayer, RustPP.Core.Name, "Canceled!");
                 return;
             }
-            PList list = (PList)Core.banWaitList[Arguments.argUser.userID];
-            BanPlayer(list.PlayerList[id], Arguments.argUser);
+            var list = RustPP.Core.banWaitList[Arguments.argUser.userID] as IEnumerable<PList.Player>;
+            BanPlayer(list.ElementAt(id), Arguments.argUser);
         }
 
         public void BanPlayer(PList.Player ban, NetUser myAdmin)
         {
             if (ban.UserID == myAdmin.userID)
             {
-                Util.sayUser(myAdmin.networkPlayer, Core.Name, "Seriously? You can't ban yourself.");
+                Util.sayUser(myAdmin.networkPlayer, RustPP.Core.Name, "Seriously? You can't ban yourself.");
                 return;
             }
             if (Administrator.IsAdmin(ban.UserID) && !Administrator.GetAdmin(myAdmin.userID).HasPermission("RCON"))
             {
-                Util.sayUser(myAdmin.networkPlayer, Core.Name, ban.DisplayName + " is an administrator. You can't ban administrators.");
+                Util.sayUser(myAdmin.networkPlayer, RustPP.Core.Name, ban.DisplayName + " is an administrator. You can't ban administrators.");
                 return;
             }
-            if (Core.blackList.Contains(ban.UserID))
+            if (RustPP.Core.blackList.Contains(ban.UserID))
             {
-                Logger.LogError(string.Format("[BanPlayer] {0}, id={1} already on blackList. WTF.", ban.DisplayName, ban.UserID));
-                Core.blackList.Remove(ban.UserID);
+                Logger.LogError(string.Format("[BanPlayer] {0}, id={1} already on blackList.", ban.DisplayName, ban.UserID));
+                RustPP.Core.blackList.Remove(ban.UserID);
             }
-            Core.blackList.Add(ban);
+            RustPP.Core.blackList.Add(ban);
             Administrator.DeleteAdmin(ban.UserID);
             Administrator.NotifyAdmins(string.Format("{0} has been banned by {1}.", ban.DisplayName, myAdmin.displayName));
             PlayerClient client;

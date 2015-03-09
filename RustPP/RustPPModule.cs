@@ -231,11 +231,11 @@
         void PlayerKilled(DeathEvent event2)
         {
             event2.DropItems = !RustPP.Hooks.KeepItem();
-            if (!(event2.Attacker is NPC)) // Not NPC
+            if (!(event2.Attacker is NPC))
             {
                 Fougerite.Player attacker = event2.Attacker as Fougerite.Player;
                 Fougerite.Player victim = event2.Victim as Fougerite.Player;
-                if ((attacker.Name != victim.Name) && (Fougerite.Server.GetServer().FindPlayer(attacker.Name) != null))
+                if (attacker != victim)
                     RustPP.Hooks.broadcastDeath(victim.Name, attacker.Name, event2.WeaponName);
             }
         }

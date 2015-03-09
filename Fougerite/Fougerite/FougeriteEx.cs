@@ -180,30 +180,6 @@ public static class FougeriteEx
         if (self.Length == 0)
             return self;
 
-        if (self.Contains("WoodSpike"))
-            self = self.Replace("Wood", "");
-
-        if (self.Equals("Barricade_Fence_Deployable"))
-            self = "Wood Barricade";
-
-        if (self.Equals("SingleBed"))
-            self = "Bed";
-
-        if (self.Contains("WindowFrame"))
-            self = self.Replace("Frame", "");
-
-        if (self.Contains("DoorFrame"))
-            self = self.Replace("Frame", "way");
-
-        if (self.Equals("MetalBarsWindow"))
-            self = "Metal Window Bars";
-
-        if (self.Equals("WoodBoxLarge"))
-            self = "Large Wood Storage";
-
-        if (self.Equals("WoodBox"))
-            self = "Wood Storage Box";
-
         var queryName = from name in ItemNames
                         group name by self.BaseItem().Similarity(name) into match
                         orderby match.Key descending
@@ -265,7 +241,7 @@ public static class FougeriteEx
         { "Rad Suit Boots", "BP" }, { "Rad Suit Helmet", "BP" }, { "Rad Suit Pants", "BP" }, { "Rad Suit Vest", "BP" }, { "Repair Bench", "Blueprint" }, { "Research Kit", "Blueprint" }, { "Revolver", "Blueprint" },
         { "Shotgun Shells", "Blueprint" }, { "Shotgun", "Blueprint" }, { "Silencer", "Blueprint" }, { "Sleeping Bag", "Blueprint" }, { "Small Medkit", "Blueprint" }, { "Small Stash", "Blueprint" },
         { "Spike Wall", "Blueprint" }, { "Stone Hatchet", "Blueprint" }, { "Torch", "Blueprint" }, { "Weapon Part 1", "BP" }, { "Weapon Part 2", "BP" }, { "Weapon Part 3", "BP" }, { "Weapon Part 4", "BP" },
-        { "Weapon Part 5", "BP" }, { "Weapon Part 6" , "BP" }, { "Weapon Part 7", "BP" }, { "Wood Barricade", "Blueprint" }, { "Wood Ceiling", "BP" }, { "Wood Doorway", "BP" }, { "Wood Foundation", "BP" },
+        { "Weapon Part 5", "BP" }, { "Weapon Part 6", "BP" }, { "Weapon Part 7", "BP" }, { "Wood Barricade", "Blueprint" }, { "Wood Ceiling", "BP" }, { "Wood Doorway", "BP" }, { "Wood Foundation", "BP" },
         { "Wood Gate", "Blueprint" }, { "Wood Gateway", "Blueprint" }, { "Wood Pillar", "BP" }, { "Wood Planks", "Blueprint" }, { "Wood Ramp", "BP" }, { "Wood Shelter", "BP" }, { "Wood Stairs", "BP" },
         { "Wood Storage Box", "Blueprint" }, { "Wood Wall", "BP" }, { "Wood Window", "BP" }, { "Wooden Door", "Blueprint" }, { "Workbench", "Blueprint" }
     };
