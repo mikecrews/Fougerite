@@ -3,66 +3,53 @@
     using Fougerite;
     using RustPP.Permissions;
     using System;
+    using System.Linq;
     using System.Collections.Generic;
 
     internal class AddAdminCommand : ChatCommand
     {
         public override void Execute(ref ConsoleSystem.Arg Arguments, ref string[] ChatArguments)
         {
-            StringComparison ic = StringComparison.InvariantCultureIgnoreCase;
-            string playerName = string.Join(" ", ChatArguments).Trim(new char[] { ' ', '"' });
-            if (playerName == string.Empty)
+            string queryName = Arguments.ArgsStr.Trim(new char[] { ' ', '"' });
+            if (queryName == string.Empty)
             {
-                Util.sayUser(Arguments.argUser.networkPlayer, Core.Name, "AddAdmin Usage:  /addadmin playerName");
+                Util.sayUser(Arguments.argUser.networkPlayer, RustPP.Core.Name, "AddAdmin Usage:  /addadmin playerName");
                 return;
             }
-            List<Administrator> list = new List<Administrator>();
-            list.Add(new Administrator(0, "Cancel"));
-            foreach (KeyValuePair<ulong, string> entry in Core.userCache)
+
+            var query = from entry in RustPP.Core.userCache
+                        let sim = entry.Value.Similarity(queryName)
+                        where sim > 0.4d
+                        group new Administrator(entry.Key, entry.Value) by sim into matches
+                        select matches.FirstOrDefault();
+
+            if (query.Count() == 1)
             {
-                if (entry.Value.Equals(playerName, ic))
-                {
-                    NewAdmin(new Administrator(entry.Key, entry.Value), Arguments.argUser);
-                    return;
-                } else if (entry.Value.Contains(playerName, true))
-                    list.Add(new Administrator(entry.Key, entry.Value));
+                NewAdmin(query.First(), Arguments.argUser);
+                return;
             }
-            if (list.Count == 1)
+            else
             {
-                foreach (PlayerClient client in PlayerClient.All)
+                Util.sayUser(Arguments.argUser.networkPlayer, RustPP.Core.Name, string.Format("{0}  players match  {2}: ", query.Count(), queryName));
+                for (int i = 1; i < query.Count(); i++)
                 {
-                    if (client.netUser.displayName.Equals(playerName, ic))
-                    {                
-                        NewAdmin(new Administrator(client.netUser.userID, client.netUser.displayName), Arguments.argUser);
-                        return;
-                    } else if (client.netUser.displayName.Contains(playerName, true))
-                        list.Add(new Administrator(client.netUser.userID, client.netUser.displayName));
+                    Util.sayUser(Arguments.argUser.networkPlayer, RustPP.Core.Name, string.Format("{0} - {1}", i, query.ElementAt(i).DisplayName));
                 }
+                Util.sayUser(Arguments.argUser.networkPlayer, RustPP.Core.Name, "0 - Cancel");
+                Util.sayUser(Arguments.argUser.networkPlayer, RustPP.Core.Name, "Please enter the number matching the player to become administrator.");
+                RustPP.Core.adminAddWaitList[Arguments.argUser.userID] = query;
             }
-            if (list.Count == 1)
-            {
-                Util.sayUser(Arguments.argUser.networkPlayer, Core.Name, "No player matches the name: " + playerName);
-                return;
-            }
-            Util.sayUser(Arguments.argUser.networkPlayer, Core.Name, string.Format("{0}  player{1} {2}: ", ((list.Count - 1)).ToString(), (((list.Count - 1) > 1) ? "s match" : " matches"), playerName));
-            for (int i = 1; i < list.Count; i++)
-            {
-                Util.sayUser(Arguments.argUser.networkPlayer, Core.Name, string.Format("{0} - {1}", i, list[i].DisplayName));
-            }
-            Util.sayUser(Arguments.argUser.networkPlayer, Core.Name, "0 - Cancel");
-            Util.sayUser(Arguments.argUser.networkPlayer, Core.Name, "Please enter the number matching the player to become administrator.");
-            Core.adminAddWaitList[Arguments.argUser.userID] = list;
         }
 
         public void PartialNameNewAdmin(ref ConsoleSystem.Arg Arguments, int id)
         {
             if (id == 0)
             {
-                Util.sayUser(Arguments.argUser.networkPlayer, Core.Name, "Cancelled!");
+                Util.sayUser(Arguments.argUser.networkPlayer, Core.Name, "Canceled!");
                 return;
             }
-            List<Administrator> list = (List<Administrator>)Core.adminAddWaitList[Arguments.argUser.userID];
-            NewAdmin(list[id], Arguments.argUser);
+            var list = Core.adminAddWaitList[Arguments.argUser.userID] as IEnumerable<Administrator>;
+            NewAdmin(list.ElementAt(id), Arguments.argUser);
         }
 
         public void NewAdmin(Administrator newAdmin, NetUser myAdmin)
@@ -72,7 +59,7 @@
                 Util.sayUser(myAdmin.networkPlayer, Core.Name, "Seriously? You are already an admin...");
             } else if (Administrator.IsAdmin(newAdmin.UserID))
             {
-                Util.sayUser(myAdmin.networkPlayer, Core.Name, newAdmin.DisplayName + " is already an administrator.");
+                Util.sayUser(myAdmin.networkPlayer, Core.Name, string.Format("{0} is already an administrator.", newAdmin.DisplayName));
             } else
             {
                 string flagstr = Core.config.GetSetting("Settings", "default_admin_flags");
