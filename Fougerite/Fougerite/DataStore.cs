@@ -34,16 +34,36 @@
                 string val = nullref;
                 if (ht[setting] != null)
                 {
-                    float tryfloat;
-                    if (float.TryParse((string)ht[setting], out tryfloat))
-                    {
-                        val = ((float)ht[setting]).ToString("G9");
-                    } 
                     var t = ht[setting].GetType();
-                    if (t == typeof(Vector4) || t == typeof(Vector3) || t == typeof(Vector2) || t == typeof(Quaternion) || t == typeof(Bounds))
+                    if (t == typeof(Vector4)) 
                     {
-                        val = ((Vector3)ht[setting]).ToString("F5");
-                    } else
+                        val = string.Format("Vector4: {0}", ((Vector4)ht[setting]).ToString("R"));
+                    } 
+                    else if (t == typeof(Vector3))
+                    {
+                        val = string.Format("Vector3: {0}", ((Vector3)ht[setting]).ToString("R"));
+                    }
+                    else if (t == typeof(Vector2))
+                    {
+                        val = string.Format("Vector2: {0}", ((Vector2)ht[setting]).ToString("R"));
+                    }
+                    else if (t == typeof(Quaternion))
+                    {
+                        val = string.Format("Quaternion: {0}", ((Quaternion)ht[setting]).ToString("R"));
+                    }
+                    else if (t == typeof(Bounds))
+                    {
+                        val = string.Format("Bounds: {0}", ((Bounds)ht[setting]).ToString("R"));
+                    }
+                    else if (t == typeof(float))
+                    {
+                        val = ((float)ht[setting]).ToString("R");
+                    }
+                    else if (t == typeof(double))
+                    {
+                        val = ((double)ht[setting]).ToString("R");
+                    }
+                    else
                     {
                         val = ht[setting].ToString();
                     }
@@ -65,21 +85,84 @@
                     if (float.TryParse(setting, out valuef))
                     {
                         Add(section, key, valuef);
-                    } else if (int.TryParse(setting, out valuei))
+                    }
+                    else if (int.TryParse(setting, out valuei))
                     {
                         Add(section, key, valuei);
-                    } else if (ini.GetBoolSetting(section, key))
+                    }
+                    else if (ini.GetBoolSetting(section, key))
                     {
                         Add(section, key, true);
-                    } else if (setting.Equals("False", StringComparison.InvariantCultureIgnoreCase))
+                    }
+                    else if (setting.Equals(bool.FalseString, StringComparison.InvariantCultureIgnoreCase))
                     {
                         Add(section, key, false);
-                    } else if (setting == "__NullReference__")
+                    }
+                    else if (setting == "__NullReference__")
                     {
                         Add(section, key, null);
-                    } else
+                    }
+                    else
                     {
-                        Add(section, key, ini.GetSetting(section, key));
+                        int i = setting.IndexOf(':');
+                        char[] rem = new char[] { '(', ')', ' ', ':', 'C', 'e', 'n', 't', 'r', 'E', 'x', 's' };
+                        char[] split = new char[] { ',' };
+                        string[] arr = setting.Remove(0, i).RemoveChars(rem).Split(split);
+                        float x; float y; float z; float w; float xx; float yy; float zz;
+                        switch (setting.Substring(0, i))
+                        {
+                            case "Vector2":
+                                if (float.TryParse(arr[0], out x) && float.TryParse(arr[1], out y))
+                                {
+                                    Add(section, key, new Vector2(x, y));
+                                }
+                                else
+                                {
+                                    Add(section, key, Vector2.zero);
+                                }
+                                break;
+                            case "Vector3":
+                                if (float.TryParse(arr[0], out x) && float.TryParse(arr[1], out y) && float.TryParse(arr[2], out z))
+                                {
+                                    Add(section, key, new Vector3(x, y, z));
+                                }
+                                else
+                                {
+                                    Add(section, key, Vector3.zero);
+                                }
+                                break;
+                            case "Vector4":
+                                if (float.TryParse(arr[0], out x) && float.TryParse(arr[1], out y) && float.TryParse(arr[2], out z) && float.TryParse(arr[3], out w))
+                                {
+                                    Add(section, key, new Vector4(x, y, z, w));
+                                }
+                                else
+                                {
+                                    Add(section, key, Vector4.zero);
+                                }
+                                break;
+                            case "Quaternion":
+                                if (float.TryParse(arr[0], out x) && float.TryParse(arr[1], out y) && float.TryParse(arr[2], out z) && float.TryParse(arr[3], out w))
+                                {
+                                    Add(section, key, new Quaternion(x, y, z, w));
+                                }
+                                else
+                                {
+                                    Add(section, key, Quaternion.identity);
+                                }
+                                break;
+                            case "Bounds":
+                                if (float.TryParse(arr[0], out x) && float.TryParse(arr[1], out y) && float.TryParse(arr[2], out z)
+                                    && float.TryParse(arr[3], out xx) && float.TryParse(arr[4], out yy) && float.TryParse(arr[5], out zz))
+                                {
+                                    Add(section, key, new Bounds(new Vector3(x, y, z), new Vector3(xx, yy, zz)));
+                                }
+                                else
+                                {
+                                    Add(section, key, new Bounds(Vector3.zero, Vector3.zero));
+                                }
+                                break;
+                        }
                     }
                 }
             }
