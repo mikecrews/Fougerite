@@ -9,7 +9,7 @@
     using System.Collections.Generic;
     using System.Runtime.InteropServices;
     using uLink;
-    using UnityEngine;
+    using UnityEngine;    
 
     public class Player
     {
@@ -21,6 +21,8 @@
         private ulong uid;
         private string name;
         private string ipaddr;
+
+        public static IDictionary<ulong, string> Cache = new Dictionary<ulong, string>();
 
         public Player()
         {
@@ -38,13 +40,39 @@
             this.FixInventoryRef();
         }
 
+        public Player(ulong uid)
+        {
+            this.justDied = false;
+            this.ourPlayer = (PlayerClient)null;
+            this.connectedAt = 0L;
+            this.uid = uid;
+            this.name = name;
+            this.ipaddr = "255.255.255.255";
+            this.invError = true;
+            this.inv = (PlayerInv)null;
+        }
+
         public void Disconnect()
         {
-            NetUser netUser = this.ourPlayer.netUser;
-            if (netUser.connected && (netUser != null))
+            if (this.IsOnline())
             {
-                netUser.Kick(NetError.NoError, true);
+                NetUser netUser = this.ourPlayer.netUser;
+                if (netUser != null)
+                {
+                    if (netUser.connected)
+                        netUser.Kick(NetError.NoError, true);
+                }
             }
+        }
+
+        public bool IsOnline()
+        {
+            bool flag = false;
+            if (this.ourPlayer != null)
+                if (this.ourPlayer.netUser != null)
+                    flag = this.ourPlayer.netUser.connected;
+
+            return flag;
         }
 
         public Fougerite.Player Find(string search)
@@ -95,9 +123,12 @@
 
         public bool HasBlueprint(BlueprintDataBlock dataBlock)
         {
-            PlayerInventory invent = this.Inventory.InternalInventory as PlayerInventory;
-            if (invent.KnowsBP(dataBlock))
-                return true;
+            if (this.IsOnline())
+            {
+                PlayerInventory invent = this.Inventory.InternalInventory as PlayerInventory;
+                if (invent.KnowsBP(dataBlock))
+                    return true;
+            }
             return false;
         }
 
@@ -106,7 +137,7 @@
             try
             {
                 Fougerite.Player victim = de.Victim as Fougerite.Player;
-                if (victim.GameID == this.GameID)
+                if (victim.UID == this.UID)
                 {
                     this.justDied = true;
                 }
@@ -119,162 +150,196 @@
 
         public void InventoryNotice(string arg)
         {
-            Rust.Notice.Inventory(this.ourPlayer.netPlayer, arg);
+            if (this.IsOnline())
+                Rust.Notice.Inventory(this.ourPlayer.netPlayer, arg);
         }
 
         public void Kill()
         {
-            TakeDamage.KillSelf(this.ourPlayer.controllable.character, null);
+            if (this.IsOnline())
+                TakeDamage.KillSelf(this.ourPlayer.controllable.character, null);
         }
 
         public void Message(string arg)
         {
-            this.SendCommand("chat.add " + Facepunch.Utility.String.QuoteSafe(Fougerite.Server.GetServer().server_message_name) + " " + Facepunch.Utility.String.QuoteSafe(arg));
+            if (this.IsOnline())
+                this.SendCommand("chat.add " + Facepunch.Utility.String.QuoteSafe(Fougerite.Server.GetServer().server_message_name) + " " + Facepunch.Utility.String.QuoteSafe(arg));
         }
 
         public void MessageFrom(string playername, string arg)
         {
-            this.SendCommand("chat.add " + Facepunch.Utility.String.QuoteSafe(playername) + " " + Facepunch.Utility.String.QuoteSafe(arg));
+            if (this.IsOnline())
+                this.SendCommand("chat.add " + Facepunch.Utility.String.QuoteSafe(playername) + " " + Facepunch.Utility.String.QuoteSafe(arg));
         }
 
         public void Notice(string arg)
         {
-            Rust.Notice.Popup(this.ourPlayer.netPlayer, "!", arg, 4f);
+            if (this.IsOnline())
+                Rust.Notice.Popup(this.ourPlayer.netPlayer, "!", arg, 4f);
         }
 
         public void Notice(string icon, string text, float duration = 4f)
         {
-            Rust.Notice.Popup(this.ourPlayer.netPlayer, icon, text, duration);
+            if (this.IsOnline())
+                Rust.Notice.Popup(this.ourPlayer.netPlayer, icon, text, duration);
         }
 
         public void SendCommand(string cmd)
         {
-            ConsoleNetworker.SendClientCommand(this.ourPlayer.netPlayer, cmd);
+            if (this.IsOnline())
+                ConsoleNetworker.SendClientCommand(this.ourPlayer.netPlayer, cmd);
         }
 
         public bool TeleportTo(Fougerite.Player p)
         {
-            return this.TeleportTo(p, 1.5f);
+            if (this.IsOnline())
+                return this.TeleportTo(p, 1.5f);
+
+            return false;
         }
 
         public bool TeleportTo(Fougerite.Player p, float distance = 1.5f)
-        { 
-            if (this == p) // lol
-                return false;
+        {
+            if (this.IsOnline())
+            {
+                if (this == p) // lol
+                    return false;
 
-            Transform transform = p.PlayerClient.controllable.transform;                                            // get the target player's transform
-            Vector3 target = transform.TransformPoint(new Vector3(0f, 0f, (this.Admin ? -distance : distance)));    // rcon admin teleports behind target player
-            return this.SafeTeleportTo(target);
+                Transform transform = p.PlayerClient.controllable.transform;                                            // get the target player's transform
+                Vector3 target = transform.TransformPoint(new Vector3(0f, 0f, (this.Admin ? -distance : distance)));    // rcon admin teleports behind target player
+                return this.SafeTeleportTo(target);
+            }
+            return false;
         }
 
         public bool SafeTeleportTo(float x, float y, float z)
         {
-            return this.SafeTeleportTo(new Vector3(x, y, z));
+            if (this.IsOnline())
+                return this.SafeTeleportTo(new Vector3(x, y, z));
+
+            return false;
         }
 
         public bool SafeTeleportTo(float x, float z)
         {
-            return this.SafeTeleportTo(new Vector3(x, 0f, z));
+            if (this.IsOnline())
+                return this.SafeTeleportTo(new Vector3(x, 0f, z));
+
+            return false;
         }
 
         public bool SafeTeleportTo(Vector3 target)
         {
-            float maxSafeDistance = 360f;
-            float seaLevel = 256f;
-            double ms = 500d;
-            string me = "SafeTeleport";
-
-            float bumpConst = 0.75f;
-            Vector3 bump = Vector3.up * bumpConst;
-            Vector3 terrain = new Vector3(target.x, Terrain.activeTerrain.SampleHeight(target), target.z);
-            RaycastHit hit;
-            IEnumerable<StructureMaster> structures = from s in StructureMaster.AllStructures
-                                                               where s.containedBounds.Contains(terrain)
-                                                               select s;
-            if (terrain.y > target.y)
-                target = terrain + bump * 2;
-
-            if (structures.Count() == 1)
+            if (this.IsOnline())
             {
-                if (Physics.Raycast(target, Vector3.down, out hit))
+                float maxSafeDistance = 360f;
+                float seaLevel = 256f;
+                double ms = 500d;
+                string me = "SafeTeleport";
+
+                float bumpConst = 0.75f;
+                Vector3 bump = Vector3.up * bumpConst;
+                Vector3 terrain = new Vector3(target.x, Terrain.activeTerrain.SampleHeight(target), target.z);
+                RaycastHit hit;
+                IEnumerable<StructureMaster> structures = from s in StructureMaster.AllStructures
+                                                          where s.containedBounds.Contains(terrain)
+                                                          select s;
+                if (terrain.y > target.y)
+                    target = terrain + bump * 2;
+
+                if (structures.Count() == 1)
                 {
-                    if (hit.collider.name == "HB Hit")
+                    if (Physics.Raycast(target, Vector3.down, out hit))
                     {
-                        // this.Message("There you are.");
+                        if (hit.collider.name == "HB Hit")
+                        {
+                            // this.Message("There you are.");
+                            return false;
+                        }
+                    }
+                    StructureMaster structure = structures.FirstOrDefault<StructureMaster>();
+                    if (!structure.containedBounds.Contains(target) || hit.distance > 8f)
+                        target = hit.point + bump;
+
+                    float distance = Vector3.Distance(this.Location, target);
+
+                    if (distance < maxSafeDistance)
+                    {
+                        return this.TeleportTo(target);
+                    }
+                    else
+                    {
+                        if (this.TeleportTo(terrain + bump * 2))
+                        {
+                            System.Timers.Timer timer = new System.Timers.Timer();
+                            timer.Interval = ms;
+                            timer.AutoReset = false;
+                            timer.Elapsed += delegate(object x, ElapsedEventArgs y)
+                            {
+                                this.TeleportTo(target);
+                            };
+                            timer.Start();
+                            return true;
+                        }
                         return false;
                     }
                 }
-                StructureMaster structure = structures.FirstOrDefault<StructureMaster>();
-                if (!structure.containedBounds.Contains(target) || hit.distance > 8f)
-                    target = hit.point + bump;
-
-                float distance = Vector3.Distance(this.Location, target);
-
-                if (distance < maxSafeDistance)
+                else if (structures.Count() == 0)
                 {
+                    if (terrain.y < seaLevel)
+                    {
+                        this.Message("That would put you in the ocean.");
+                        return false;
+                    }
+
+                    if (Physics.Raycast(terrain + Vector3.up * 300f, Vector3.down, out hit))
+                    {
+                        if (hit.collider.name == "HB Hit")
+                        {
+                            this.Message("There you are.");
+                            return false;
+                        }
+                        Vector3 worldPos = target - Terrain.activeTerrain.transform.position;
+                        Vector3 tnPos = new Vector3(Mathf.InverseLerp(0, Terrain.activeTerrain.terrainData.size.x, worldPos.x), 0, Mathf.InverseLerp(0, Terrain.activeTerrain.terrainData.size.z, worldPos.z));
+                        float gradient = Terrain.activeTerrain.terrainData.GetSteepness(tnPos.x, tnPos.z);
+                        if (gradient > 50f)
+                        {
+                            this.Message("It's too steep there.");
+                            return false;
+                        }
+                        target = hit.point + bump * 2;
+                    }
+                    float distance = Vector3.Distance(this.Location, target);
+                    Logger.LogDebug(string.Format("[{0}] player={1}({2}) from={3} to={4} distance={5} terrain={6}", me, this.Name, this.GameID,
+                        this.Location.ToString(), target.ToString(), distance.ToString("F2"), terrain.ToString()));
+
                     return this.TeleportTo(target);
-                } else
+                }
+                else
                 {
-                    if (this.TeleportTo(terrain + bump * 2))
-                    {
-                        System.Timers.Timer timer = new System.Timers.Timer();
-                        timer.Interval = ms;
-                        timer.AutoReset = false;
-                        timer.Elapsed += delegate(object x, ElapsedEventArgs y) {
-                            this.TeleportTo(target);
-                        };
-                        timer.Start();
-                        return true;
-                    }
-                    return false;
-                }            
-            } else if (structures.Count() == 0)
-            {
-                if (terrain.y < seaLevel)
-                {
-                    this.Message("That would put you in the ocean.");
+                    Logger.LogDebug(string.Format("[{0}] structures.Count is {1}. Weird.", me, structures.Count().ToString()));
+                    Logger.LogDebug(string.Format("[{0}] target={1} terrain{2}", me, target.ToString(), terrain.ToString()));
+                    this.Message("Cannot execute safely with the parameters supplied.");
                     return false;
                 }
-
-                if (Physics.Raycast(terrain + Vector3.up * 300f, Vector3.down, out hit))
-                {
-                    if (hit.collider.name == "HB Hit")
-                    {
-                        this.Message("There you are.");
-                        return false;
-                    }
-                    Vector3 worldPos = target - Terrain.activeTerrain.transform.position;
-                    Vector3 tnPos = new Vector3(Mathf.InverseLerp(0, Terrain.activeTerrain.terrainData.size.x, worldPos.x), 0, Mathf.InverseLerp(0, Terrain.activeTerrain.terrainData.size.z, worldPos.z));
-                    float gradient = Terrain.activeTerrain.terrainData.GetSteepness(tnPos.x, tnPos.z);
-                    if (gradient > 50f)
-                    {
-                        this.Message("It's too steep there.");
-                        return false;
-                    }
-                    target = hit.point + bump * 2;
-                }
-                float distance = Vector3.Distance(this.Location, target);
-                Logger.LogDebug(string.Format("[{0}] player={1}({2}) from={3} to={4} distance={5} terrain={6}", me, this.Name, this.GameID,
-                    this.Location.ToString(), target.ToString(), distance.ToString("F2"), terrain.ToString()));
-
-                return this.TeleportTo(target);
-            } else
-            {
-                Logger.LogDebug(string.Format("[{0}] structures.Count is {1}. Weird.", me, structures.Count().ToString()));
-                Logger.LogDebug(string.Format("[{0}] target={1} terrain{2}", me, target.ToString(), terrain.ToString()));
-                this.Message("Cannot execute safely with the parameters supplied.");
-                return false;
             }
+            return false;
         }
 
         public bool TeleportTo(float x, float y, float z)
         {
-            return this.TeleportTo(new Vector3(x, y, z));
+            if (this.IsOnline())
+                return this.TeleportTo(new Vector3(x, y, z));
+
+            return false;
         }
 
         public bool TeleportTo(Vector3 target)
         {
-            return RustServerManagement.Get().TeleportPlayerToWorld(this.ourPlayer.netPlayer, target);
+            if (this.IsOnline())
+                return RustServerManagement.Get().TeleportPlayerToWorld(this.ourPlayer.netPlayer, target);
+
+            return false;
         }
 
         public bool Admin

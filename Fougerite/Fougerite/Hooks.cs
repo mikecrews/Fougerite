@@ -306,7 +306,14 @@
                 return connected;
             }
             server.Players.Add(player);
-
+            if (!Fougerite.Player.Cache.ContainsKey(user.userID))
+            {
+                Fougerite.Player.Cache.Add(user.userID, user.displayName);
+            }
+            else if (user.displayName != Fougerite.Player.Cache[user.userID])
+            {
+                Fougerite.Player.Cache[user.userID] = user.displayName;
+            }
             if (OnPlayerConnected != null)
                 OnPlayerConnected(player);
 
