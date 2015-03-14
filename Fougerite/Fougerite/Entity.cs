@@ -299,6 +299,14 @@
         {
             get
             {
+                return this._name;
+            }
+        }
+
+        public string ItemName
+        {
+            get
+            {
                 if (ItemByClone.ContainsKey(this._name))
                     return ItemByClone[this._name];
 
