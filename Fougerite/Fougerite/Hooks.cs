@@ -84,10 +84,10 @@
             if (string.IsNullOrEmpty(arg.ArgsStr))
                 return;
 
-            var quotedName = Facepunch.Utility.String.QuoteSafe(arg.argUser.displayName);
-            var quotedMessage = Facepunch.Utility.String.QuoteSafe(arg.GetString(0));
-            if (quotedMessage.Trim('"').StartsWith("/"))
-                Logger.LogDebug("[CHAT-CMD] " + quotedName + " executed " + quotedMessage);
+            var quotedName = arg.argUser.displayName.QuoteSafe();
+            var quotedMessage = arg.GetString(0).QuoteSafe();
+            if (arg.GetString(0).StartsWith("/"))
+                Logger.LogDebug(string.Format("[CHAT-CMD] {0} executed {1}", quotedName, quotedMessage));
 
             if (OnChatRaw != null)
                 OnChatRaw(ref arg);
@@ -110,14 +110,14 @@
                 if(OnChat != null)
                     OnChat(Fougerite.Player.FindByPlayerClient(arg.argUser.playerClient), ref chatstr);
 
-                string newchat = Facepunch.Utility.String.QuoteSafe(chatstr.NewText.Substring(1, chatstr.NewText.Length - 2)).Replace("\\\"", "" + '\u0022');
+                string newchat = chatstr.NewText.Substring(1, chatstr.NewText.Length - 2).QuoteSafe().Replace("\\\"", "" + '\u0022');
 
                 if (string.IsNullOrEmpty(newchat))
                     return;
 
                 Fougerite.Data.GetData().chat_history.Add(newchat);
                 Fougerite.Data.GetData().chat_history_username.Add(quotedName);                                                   
-                ConsoleNetworker.Broadcast("chat.add " + quotedName + " " + newchat);
+                ConsoleNetworker.Broadcast(string.Format("chat.add {0} {1}", quotedName, newchat));
             }
         }
 

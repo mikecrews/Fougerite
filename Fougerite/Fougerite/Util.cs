@@ -200,30 +200,30 @@
         public static void say(uLink.NetworkPlayer player, string playername, string arg)
         {
             if (!string.IsNullOrEmpty(arg) && !string.IsNullOrEmpty(playername) && player != null)
-                ConsoleNetworker.SendClientCommand(player, "chat.add " + playername + " " + arg);
+                ConsoleNetworker.SendClientCommand(player, string.Format("chat.add {0} {1}", playername.QuoteSafe(), arg.QuoteSafe()));
         }
 
         public static void sayAll(string customName, string arg)
         {
-            ConsoleNetworker.Broadcast("chat.add " + Facepunch.Utility.String.QuoteSafe(customName) + " " + Facepunch.Utility.String.QuoteSafe(arg));
+            ConsoleNetworker.Broadcast(string.Format("chat.add {0} {1}", customName.QuoteSafe(), arg.QuoteSafe()));
         }
 
         public static void sayAll(string arg)
         {
             if (!string.IsNullOrEmpty(arg))
-                ConsoleNetworker.Broadcast("chat.add " + Facepunch.Utility.String.QuoteSafe(Fougerite.Server.GetServer().server_message_name) + " " + Facepunch.Utility.String.QuoteSafe(arg));
+                ConsoleNetworker.Broadcast(string.Format("chat.add {0} {1}", Fougerite.Server.GetServer().server_message_name.QuoteSafe(), arg.QuoteSafe()));
         }
 
         public static void sayUser(uLink.NetworkPlayer player, string arg)
         {
             if (!string.IsNullOrEmpty(arg) && player != null)
-                ConsoleNetworker.SendClientCommand(player, "chat.add " + Facepunch.Utility.String.QuoteSafe(Fougerite.Server.GetServer().server_message_name) + " " + Facepunch.Utility.String.QuoteSafe(arg));
+                ConsoleNetworker.SendClientCommand(player, string.Format("chat.add {0} {1}", Fougerite.Server.GetServer().server_message_name.QuoteSafe(), arg.QuoteSafe()));
         }
 
         public static void sayUser(uLink.NetworkPlayer player, string customName, string arg)
         {
             if (!string.IsNullOrEmpty(arg) && !string.IsNullOrEmpty(customName) && player != null)
-                ConsoleNetworker.SendClientCommand(player, "chat.add " + Facepunch.Utility.String.QuoteSafe(customName) + " " + Facepunch.Utility.String.QuoteSafe(arg));
+                ConsoleNetworker.SendClientCommand(player, string.Format("chat.add {0} {1}", customName.QuoteSafe(), arg.QuoteSafe()));
         }
 
         public void SetStaticField(string className, string field, object val)

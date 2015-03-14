@@ -87,6 +87,11 @@ public static class FougeriteEx
         return res;
     }
 
+    public static string QuoteSafe(this string self)
+    {
+        return Facepunch.Utility.String.QuoteSafe(self);
+    }
+
     public static string LongestCommonSubstring(this string self, string test)
     {
         int[,] lengths = new int[self.Length, test.Length];
