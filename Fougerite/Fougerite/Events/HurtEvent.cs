@@ -86,7 +86,7 @@
             }
             else if (d.attacker.client != null)
             {
-                this.Attacker = new Fougerite.Player(d.attacker.client);
+                this.Attacker = Fougerite.Player.FindByPlayerClient(d.attacker.client);
                 this._playerattacker = true;
                 if (d.attacker.id is TimedExplosive)
                 {
@@ -117,7 +117,20 @@
                 {
                     if (!d.attacker.IsDifferentPlayer(d.victim.client))
                     {
-                        weaponName = "Fall Damage";
+                        var y = (this.Victim as Fougerite.Player).Y;
+                        var t = World.GetWorld().GetTerrainHeight((this.Victim as Fougerite.Player).Location);
+                        if (y < t)
+                        {
+                            weaponName = "Cheating";
+                        }
+                        else if (y < 255f && t < 255f)
+                        {
+                            weaponName = "Drowning";
+                        }
+                        else
+                        {
+                            weaponName = "Falling";
+                        }
                     }
                 }
                 else
