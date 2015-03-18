@@ -22,7 +22,7 @@
         private string name;
         private string ipaddr;
 
-        public static IDictionary<ulong, string> Cache = new Dictionary<ulong, string>();
+        public static IDictionary<ulong, Fougerite.Player> Cache = new Dictionary<ulong, Fougerite.Player>();
 
         public Player()
         {
@@ -40,21 +40,27 @@
             this.FixInventoryRef();
         }
 
-        public Player(ulong uid)
+        public void OnConnect(NetUser user)
+        {
+            this.justDied = true;
+            this.ourPlayer = user.playerClient;
+            this.connectedAt = DateTime.UtcNow.Ticks;
+            this.name = user.displayName;
+            this.ipaddr = user.networkPlayer.externalIP;
+            this.FixInventoryRef();
+        }
+
+        public void OnDisconnect(ulong uid)
         {
             this.justDied = false;
             this.ourPlayer = (PlayerClient)null;
             this.connectedAt = 0L;
-            this.uid = uid;
-            this.name = name;
             this.ipaddr = "255.255.255.255";
-            this.invError = true;
-            this.inv = (PlayerInv)null;
         }
 
         public void Disconnect()
         {
-            if (this.IsOnline())
+            if (this.IsOnline)
             {
                 NetUser netUser = this.ourPlayer.netUser;
                 if (netUser != null)
@@ -65,14 +71,16 @@
             }
         }
 
-        public bool IsOnline()
+        public bool IsOnline
         {
-            bool flag = false;
-            if (this.ourPlayer != null)
-                if (this.ourPlayer.netUser != null)
-                    flag = this.ourPlayer.netUser.connected;
+            get
+            {
+                if (this.ourPlayer != null)
+                    if (this.ourPlayer.netUser != null)
+                        return this.ourPlayer.netUser.connected;
 
-            return flag;
+                return false;
+            }
         }
 
         public Fougerite.Player Find(string search)
@@ -82,22 +90,48 @@
 
         public static Fougerite.Player Search(string search)
         {
-            return Fougerite.Server.GetServer().FindPlayer(search);
+            IEnumerable<Fougerite.Player> query;
+            if (search.StartsWith("7656119"))
+            {
+                ulong uid;
+                if (ulong.TryParse(search, out uid))
+                {
+                    if (Cache.ContainsKey(uid))
+                        return Cache[uid];
+                }
+                else
+                {
+                    query = from player in Cache.Values
+                            group player by search.Similarity(player.SteamID) into match
+                            orderby match.Key descending
+                            select match.FirstOrDefault();
+
+                    Logger.LogDebug(string.Format("[Player.Search] search={0} matches={1}", search, string.Join(", ", query.Select(p => p.SteamID).ToArray<string>())));
+                    return query.FirstOrDefault();
+                }
+            }
+            query = from player in Cache.Values
+                    group player by search.Similarity(player.Name) into match
+                    orderby match.Key descending
+                    select match.FirstOrDefault();
+
+            Logger.LogDebug(string.Format("[FindPlayer] search={0} matches={1}", search, string.Join(", ", query.Select(p => p.Name).ToArray<string>())));
+            return query.FirstOrDefault();
         }
 
         public static Fougerite.Player FindBySteamID(string search)
         {
-            return Fougerite.Server.GetServer().FindPlayer(search);
+            return Search(search);
         }
 
         public static Fougerite.Player FindByGameID(string search)
         {
-            return FindBySteamID(search);
+            return Search(search);
         }
 
         public static Fougerite.Player FindByName(string search)
         {
-            return Fougerite.Server.GetServer().FindPlayer(search);
+            return Search(search);
         }
 
         public static Fougerite.Player FindByNetworkPlayer(uLink.NetworkPlayer np)
@@ -123,7 +157,7 @@
 
         public bool HasBlueprint(BlueprintDataBlock dataBlock)
         {
-            if (this.IsOnline())
+            if (this.IsOnline)
             {
                 PlayerInventory invent = this.Inventory.InternalInventory as PlayerInventory;
                 if (invent.KnowsBP(dataBlock))
@@ -150,49 +184,49 @@
 
         public void InventoryNotice(string arg)
         {
-            if (this.IsOnline())
+            if (this.IsOnline)
                 Rust.Notice.Inventory(this.ourPlayer.netPlayer, arg);
         }
 
         public void Kill()
         {
-            if (this.IsOnline())
+            if (this.IsOnline)
                 TakeDamage.KillSelf(this.ourPlayer.controllable.character, null);
         }
 
         public void Message(string arg)
         {
-            if (this.IsOnline())
-                this.SendCommand("chat.add " + Facepunch.Utility.String.QuoteSafe(Fougerite.Server.GetServer().server_message_name) + " " + Facepunch.Utility.String.QuoteSafe(arg));
+            if (this.IsOnline)
+                this.SendCommand(string.Format("chat.add {0} {1}", Fougerite.Server.GetServer().server_message_name.QuoteSafe(), arg.QuoteSafe()));
         }
 
         public void MessageFrom(string playername, string arg)
         {
-            if (this.IsOnline())
-                this.SendCommand("chat.add " + Facepunch.Utility.String.QuoteSafe(playername) + " " + Facepunch.Utility.String.QuoteSafe(arg));
+            if (this.IsOnline)
+                this.SendCommand(string.Format("chat.add {0} {1}", playername.QuoteSafe(), arg.QuoteSafe()));
         }
 
         public void Notice(string arg)
         {
-            if (this.IsOnline())
+            if (this.IsOnline)
                 Rust.Notice.Popup(this.ourPlayer.netPlayer, "!", arg, 4f);
         }
 
         public void Notice(string icon, string text, float duration = 4f)
         {
-            if (this.IsOnline())
+            if (this.IsOnline)
                 Rust.Notice.Popup(this.ourPlayer.netPlayer, icon, text, duration);
         }
 
         public void SendCommand(string cmd)
         {
-            if (this.IsOnline())
+            if (this.IsOnline)
                 ConsoleNetworker.SendClientCommand(this.ourPlayer.netPlayer, cmd);
         }
 
         public bool TeleportTo(Fougerite.Player p)
         {
-            if (this.IsOnline())
+            if (this.IsOnline)
                 return this.TeleportTo(p, 1.5f);
 
             return false;
@@ -200,7 +234,7 @@
 
         public bool TeleportTo(Fougerite.Player p, float distance = 1.5f)
         {
-            if (this.IsOnline())
+            if (this.IsOnline)
             {
                 if (this == p) // lol
                     return false;
@@ -214,7 +248,7 @@
 
         public bool SafeTeleportTo(float x, float y, float z)
         {
-            if (this.IsOnline())
+            if (this.IsOnline)
                 return this.SafeTeleportTo(new Vector3(x, y, z));
 
             return false;
@@ -222,7 +256,7 @@
 
         public bool SafeTeleportTo(float x, float z)
         {
-            if (this.IsOnline())
+            if (this.IsOnline)
                 return this.SafeTeleportTo(new Vector3(x, 0f, z));
 
             return false;
@@ -230,7 +264,7 @@
 
         public bool SafeTeleportTo(Vector3 target)
         {
-            if (this.IsOnline())
+            if (this.IsOnline)
             {
                 float maxSafeDistance = 360f;
                 float seaLevel = 256f;
@@ -328,7 +362,7 @@
 
         public bool TeleportTo(float x, float y, float z)
         {
-            if (this.IsOnline())
+            if (this.IsOnline)
                 return this.TeleportTo(new Vector3(x, y, z));
 
             return false;
@@ -336,7 +370,7 @@
 
         public bool TeleportTo(Vector3 target)
         {
-            if (this.IsOnline())
+            if (this.IsOnline)
                 return RustServerManagement.Get().TeleportPlayerToWorld(this.ourPlayer.netPlayer, target);
 
             return false;
@@ -346,7 +380,10 @@
         {
             get
             {
-                return this.ourPlayer.netUser.admin;
+                if (this.IsOnline)
+                    return this.ourPlayer.netUser.admin;
+
+                return false;
             }
         }
 
@@ -378,7 +415,25 @@
         {
             get
             {
-                return this.ourPlayer.controllable.health;
+                if (this.IsOnline)
+                    return this.ourPlayer.controllable.health;
+
+                return 0f;
+            }
+            set
+            {
+                if (!this.IsOnline)
+                    return;
+
+                if (value < 0f)
+                {
+                    this.ourPlayer.controllable.takeDamage.health = 0f;
+                }
+                else
+                {
+                    this.ourPlayer.controllable.takeDamage.health = value;
+                }
+                this.ourPlayer.controllable.takeDamage.Heal(this.ourPlayer.controllable, 0f);
             }
         }
 
@@ -386,6 +441,9 @@
         {
             get
             {
+                if (!this.IsOnline)
+                    return (PlayerInv)null;
+
                 if (this.invError || this.justDied)
                 {
                     this.inv = new PlayerInv(this);
@@ -408,7 +466,10 @@
         {
             get
             {
-                return this.ourPlayer.controllable.GetComponent<HumanBodyTakeDamage>().IsBleeding();
+                if (this.IsOnline)
+                    return this.ourPlayer.controllable.GetComponent<HumanBodyTakeDamage>().IsBleeding();
+
+                return false;
             }
         }
 
@@ -416,7 +477,10 @@
         {
             get
             {
-                return this.ourPlayer.controllable.GetComponent<Metabolism>().IsCold();
+                if (this.IsOnline)
+                    return this.ourPlayer.controllable.GetComponent<Metabolism>().IsCold();
+
+                return false;
             }
         }
 
@@ -424,7 +488,10 @@
         {
             get
             {
-                return (this.ourPlayer.controllable.GetComponent<FallDamage>().GetLegInjury() != 0f);
+                if (this.IsOnline)
+                    return (this.ourPlayer.controllable.GetComponent<FallDamage>().GetLegInjury() != 0f);
+
+                return false;
             }
         }
 
@@ -432,7 +499,10 @@
         {
             get
             {
-                return this.PlayerClient.controllable.GetComponent<Metabolism>().HasRadiationPoisoning();
+                if (this.IsOnline)
+                    return this.PlayerClient.controllable.GetComponent<Metabolism>().HasRadiationPoisoning();
+
+                return false;
             }
         }
 
@@ -440,7 +510,10 @@
         {
             get
             {
-                return this.PlayerClient.controllable.GetComponent<Metabolism>().IsWarm();
+                if (this.IsOnline)
+                    return this.PlayerClient.controllable.GetComponent<Metabolism>().IsWarm();
+
+                return false;
             }
         }
 
@@ -448,7 +521,10 @@
         {
             get
             {
-                return this.PlayerClient.controllable.GetComponent<Metabolism>().IsPoisoned();
+                if (this.IsOnline)
+                    return this.PlayerClient.controllable.GetComponent<Metabolism>().IsPoisoned();
+
+                return false;
             }
         }
 
@@ -456,7 +532,10 @@
         {
             get
             {
-                return this.CalorieLevel <= 0.0;
+                if (this.IsOnline)
+                    return this.CalorieLevel <= 0.0;
+
+                return false;
             }
         }
 
@@ -464,7 +543,26 @@
         {
             get
             {
-                return this.CalorieLevel < 500.0;
+                if (this.IsOnline)
+                    return this.CalorieLevel < 500.0;
+
+                return false;
+            }
+        }
+
+        public float CoreTemperature
+        {
+            get 
+            {
+                if (this.IsOnline)
+                    return this.PlayerClient.controllable.GetComponent<Metabolism>().coreTemperature;
+
+                return 0f;
+            }
+            set
+            {
+                if (this.IsOnline)
+                    this.PlayerClient.controllable.GetComponent<Metabolism>().coreTemperature = value;
             }
         }
 
@@ -472,7 +570,10 @@
         {
             get
             {
-                return this.PlayerClient.controllable.GetComponent<HumanBodyTakeDamage>()._bleedingLevel;
+                if (this.IsOnline)
+                    return this.PlayerClient.controllable.GetComponent<HumanBodyTakeDamage>()._bleedingLevel;
+
+                return 0f;
             }
         }
 
@@ -480,12 +581,18 @@
         {
             get
             {
-                return this.PlayerClient.controllable.GetComponent<Metabolism>().GetCalorieLevel();
+                if (this.IsOnline)
+                    return this.PlayerClient.controllable.GetComponent<Metabolism>().GetCalorieLevel();
+
+                return 0f;
             }
         }
 
         public void AdjustCalorieLevel(float amount)
         {
+            if (!this.IsOnline)
+                return;
+
             if (amount < 0)
                 this.PlayerClient.controllable.GetComponent<Metabolism>().SubtractCalories(Math.Abs(amount));
 
@@ -497,27 +604,36 @@
         {
             get
             {
-                return this.PlayerClient.controllable.GetComponent<Metabolism>().GetRadLevel();
+                if (this.IsOnline)
+                    return this.PlayerClient.controllable.GetComponent<Metabolism>().GetRadLevel();
+
+                return 0f;
             }
         }
 
         public void AddRads(float amount)
         {
-            this.PlayerClient.controllable.GetComponent<Metabolism>().AddRads(amount);
+            if (this.IsOnline)
+                this.PlayerClient.controllable.GetComponent<Metabolism>().AddRads(amount);
         }
 
         public void AddAntiRad(float amount)
         {
-            this.PlayerClient.controllable.GetComponent<Metabolism>().AddAntiRad(amount);
+            if (this.IsOnline)
+                this.PlayerClient.controllable.GetComponent<Metabolism>().AddAntiRad(amount);
         }
 
         public void AddWater(float litres)
         {
-            this.PlayerClient.controllable.GetComponent<Metabolism>().AddWater(litres);
+            if (this.IsOnline)
+                this.PlayerClient.controllable.GetComponent<Metabolism>().AddWater(litres);
         }
 
         public void AdjustPoisonLevel(float amount)
         {
+            if (!this.IsOnline)
+                return;
+
             if (amount < 0)
                 this.PlayerClient.controllable.GetComponent<Metabolism>().SubtractPosion(Math.Abs(amount));
 
@@ -529,11 +645,10 @@
         {
             get
             {
-                return this.ourPlayer.lastKnownPosition;
-            }
-            set
-            {
-                this.ourPlayer.transform.position.Set(value.x, value.y, value.z);
+                if (this.IsOnline)
+                    return this.ourPlayer.lastKnownPosition;
+
+                return Vector3.zero;
             }
         }
 
@@ -551,11 +666,35 @@
             }
         }
 
+        public Entity Sleeper
+        {
+            get
+            {
+                if (this.IsOnline)
+                    return (Entity)null;
+
+                var query = from sleeper in UnityEngine.Object.FindObjectsOfType<SleepingAvatar>()
+                            let deployable = sleeper.GetComponent<DeployableObject>()
+                            where deployable.ownerID == this.uid
+                            select new Entity(deployable);
+
+                return query.FirstOrDefault();
+            }
+        }
+
         public bool AtHome
         {
             get
             {
-                return this.Structures.Any(e => (e.Object as StructureMaster).containedBounds.Contains(this.Location));
+                if (this.IsOnline)
+                {
+                    return this.Structures.Any(e => (e.Object as StructureMaster).containedBounds.Contains(this.Location));
+                }
+                else if (this.Sleeper != null)
+                {
+                    return this.Structures.Any(e => (e.Object as StructureMaster).containedBounds.Contains(this.Sleeper.Location));
+                }
+                return false;
             }
         }
 
@@ -563,7 +702,10 @@
         {
             get
             {
-                return this.ourPlayer.netPlayer.averagePing;
+                if (this.IsOnline)
+                    return this.ourPlayer.netPlayer.averagePing;
+
+                return int.MaxValue;
             }
         }
 
@@ -579,7 +721,10 @@
         {
             get
             {
-                return ((DateTime.UtcNow.Ticks - this.connectedAt) / 0x2710L);
+                if (this.IsOnline)
+                    return ((DateTime.UtcNow.Ticks - this.connectedAt) / 0x2710L);
+
+                return 0L;
             }
         }
 
@@ -587,11 +732,12 @@
         {
             get
             {
-                return this.ourPlayer.lastKnownPosition.x;
+                return this.Location.x;
             }
             set
             {
-                this.ourPlayer.transform.position.Set(value, this.Y, this.Z);
+                if (this.IsOnline)
+                    this.ourPlayer.transform.position.Set(value, this.Y, this.Z);
             }
         }
 
@@ -599,11 +745,12 @@
         {
             get
             {
-                return this.ourPlayer.lastKnownPosition.y;
+                return this.Location.y;
             }
             set
             {
-                this.ourPlayer.transform.position.Set(this.X, value, this.Z);
+                if (this.IsOnline) 
+                    this.ourPlayer.transform.position.Set(this.X, value, this.Z);
             }
         }
 
@@ -611,11 +758,12 @@
         {
             get
             {
-                return this.ourPlayer.lastKnownPosition.z;
+                return this.Location.z;
             }
             set
             {
-                this.ourPlayer.transform.position.Set(this.X, this.Y, value);
+                if (this.IsOnline) 
+                    this.ourPlayer.transform.position.Set(this.X, this.Y, value);
             }
         }
 

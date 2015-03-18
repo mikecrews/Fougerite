@@ -50,7 +50,7 @@
                             select player;
 
                     if (query.Count() == 1)
-                        return query.FirstOrDefault();
+                        return query.First();
                 }
                 else
                 {

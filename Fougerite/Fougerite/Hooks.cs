@@ -291,53 +291,47 @@
         public static bool PlayerConnect(NetUser user)
         {
             bool connected = false;
+            IDictionary<ulong, Fougerite.Player> playercache = Fougerite.Player.Cache;
+            ulong uid = user.userID;
 
             if (user.playerClient == null) {
                 Logger.LogDebug("PlayerConnect user.playerClient is null");
                 return connected;
             }
 
-            Fougerite.Server server = Fougerite.Server.GetServer();
-            Fougerite.Player player = new Fougerite.Player(user.playerClient);
-            if (server.Players.Contains(player))
+            if (!playercache.ContainsKey(uid))
             {
-                Logger.LogError(string.Format("[PlayerConnect] Server.Players already contains {0} {1}", player.Name, player.SteamID));
-                connected = user.connected;
-                return connected;
+                playercache.Add(uid, new Fougerite.Player(user.playerClient));
             }
-            server.Players.Add(player);
-            if (!Fougerite.Player.Cache.ContainsKey(user.userID))
+            else
             {
-                Fougerite.Player.Cache.Add(user.userID, user.displayName);
+                playercache[uid].OnConnect(user);
             }
-            else if (user.displayName != Fougerite.Player.Cache[user.userID])
-            {
-                Fougerite.Player.Cache[user.userID] = user.displayName;
-            }
+            Fougerite.Server.GetServer().Players.Add(playercache[uid]);
+
             if (OnPlayerConnected != null)
-                OnPlayerConnected(player);
+                OnPlayerConnected(playercache[uid]);
 
             connected = user.connected;
 
             if (Fougerite.Config.GetBoolValue("Fougerite", "tellversion"))
-                player.Message(string.Format("This server is powered by Fougerite v.{0}!", Bootstrap.Version));
+                playercache[uid].Message(string.Format("This server is powered by Fougerite v.{0}!", Bootstrap.Version));
 
             return connected;
         }
 
         public static void PlayerDisconnect(NetUser user)
         {
+            ulong uid = user.userID;
+            IDictionary<ulong, Fougerite.Player> playercache = Fougerite.Player.Cache;
+            Fougerite.Server.GetServer().Players.Remove(playercache[uid]);
+            playercache[uid].OnDisconnect(uid);
+            Logger.LogDebug("User Disconnected: " + playercache[uid].Name + " (" + playercache[uid].SteamID + ")");
+
             try
             {
-                Fougerite.Player item = Fougerite.Player.FindByPlayerClient(user.playerClient);
-                if (item == null)
-                    return;
-
-                Fougerite.Server.GetServer().Players.Remove(item);
-                Logger.LogDebug("User Disconnected: " + item.Name + " (" + item.SteamID + ")");
                 if (OnPlayerDisconnected != null)
-                    OnPlayerDisconnected(item);
-
+                    OnPlayerDisconnected(playercache[uid]);
             }
             catch { }
         }
