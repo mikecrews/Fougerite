@@ -204,6 +204,14 @@ public static class FougeriteEx
         return queryName.First();
     }
 
+    public static string Prefab(this string self)
+    {
+        if (PrefabByItemName.ContainsKey(self))
+            return PrefabByItemName[self];
+
+        return self;
+    }
+
     private static readonly string BP = "BP";
     private static readonly string BLUEPRINT = "Blueprint";
 
@@ -249,5 +257,18 @@ public static class FougeriteEx
         { "Weapon Part 5", "BP" }, { "Weapon Part 6", "BP" }, { "Weapon Part 7", "BP" }, { "Wood Barricade", "Blueprint" }, { "Wood Ceiling", "BP" }, { "Wood Doorway", "BP" }, { "Wood Foundation", "BP" },
         { "Wood Gate", "Blueprint" }, { "Wood Gateway", "Blueprint" }, { "Wood Pillar", "BP" }, { "Wood Planks", "Blueprint" }, { "Wood Ramp", "BP" }, { "Wood Shelter", "BP" }, { "Wood Stairs", "BP" },
         { "Wood Storage Box", "Blueprint" }, { "Wood Wall", "BP" }, { "Wood Window", "BP" }, { "Wooden Door", "Blueprint" }, { "Workbench", "Blueprint" }
+    };
+
+    private static readonly IDictionary<string, string> PrefabByItemName = new Dictionary<string, string>()
+    {
+        { "Bed", ";deploy_singlebed" }, { "Metal Ceiling", ";struct_metal_ceiling" }, { "Metal Doorway", ";struct_metal_doorframe" }, { "Metal Foundation", ";struct_metal_foundation" },
+        { "Metal Pillar", ";struct_metal_pillar" }, { "Metal Ramp", ";struct_metal_ramp" }, { "Metal Stairs", ";struct_metal_stairs" }, { "Metal Wall", ";struct_metal_wall" }, 
+        { "Metal Window", ";struct_metal_windowframe" }, { "Wood Ceiling", ";struct_wood_ceiling" }, { "Wood Doorway", ";struct_wood_doorway" }, { "Wood Foundation", ";struct_wood_foundation" },
+        { "Wood Pillar", ";struct_wood_pillar" }, { "Wood Ramp", ";struct_wood_ramp" }, { "Wood Stairs", ";struct_wood_stairs" }, { "Wood Wall", ";struct_wood_wall" }, 
+        { "Wood WindowFrame", ";struct_wood_windowframe" }, { "Campfire", ";deploy_camp_bonfire" }, { "Explosive Charge", ";explosive_charge" }, { "Furnace", ";deploy_furnace" },
+        { "Large Spike Wall", ";deploy_largewoodspikewall" }, { "Large Wood Storage", ";deploy_wood_storage_large" }, { "Metal Door", ";deploy_metal_door" },
+        { "Metal Window Bars", ";deploy_metalwindowbars" }, { "Repair Bench", ";deploy_repairbench" }, { "Sleeping Bag", ";deploy_camp_sleepingbag" }, { "Small Stash", ";deploy_small_stash" },
+        { "Spike Wall", ";deploy_woodspikewall" }, { "Wood Barricade", ";deploy_wood_barricade" }, { "Wood Gate", ";deploy_woodgate" }, { "Wood Gateway", ";deploy_woodgateway" },
+        { "Wood Shelter", ";deploy_wood_shelter" }, { "Wood Storage Box", ";deploy_wood_box" }, { "Wooden Door", ";deploy_wood_door" }, { "Workbench", ";deploy_workbench" }
     };
 }
