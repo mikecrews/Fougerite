@@ -31,7 +31,7 @@
             }
             else
             {
-                Util.sayUser(Arguments.argUser.networkPlayer, RustPP.Core.Name, string.Format("{0}  administrators match  {2}: ", query.Count(), queryName));
+                Util.sayUser(Arguments.argUser.networkPlayer, RustPP.Core.Name, string.Format("{0}  administrators match  {1}: ", query.Count(), queryName));
                 for (int i = 1; i < query.Count(); i++)
                 {
                     Util.sayUser(Arguments.argUser.networkPlayer, RustPP.Core.Name, string.Format("{0} - {1}", i, query.ElementAt(i).DisplayName));
