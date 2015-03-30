@@ -21,7 +21,6 @@
         private ulong uid;
         private string name;
         private string ipaddr;
-
         public static IDictionary<ulong, Fougerite.Player> Cache = new Dictionary<ulong, Fougerite.Player>();
 
         public Player()
@@ -50,12 +49,9 @@
             this.FixInventoryRef();
         }
 
-        public void OnDisconnect(ulong uid)
+        public void OnDisconnect()
         {
             this.justDied = false;
-            this.ourPlayer = (PlayerClient)null;
-            this.connectedAt = 0L;
-            this.ipaddr = "255.255.255.255";
         }
 
         public void Disconnect()
@@ -77,7 +73,7 @@
             {
                 if (this.ourPlayer != null)
                     if (this.ourPlayer.netUser != null)
-                        return this.ourPlayer.netUser.connected;
+                        return this.ourPlayer.netUser.connected == true;
 
                 return false;
             }
@@ -661,8 +657,11 @@
             set
             {
                 this.name = value;
-                this.ourPlayer.netUser.user.displayname_ = value; // displayName
-                this.ourPlayer.userName = value; // displayName
+                if (this.IsOnline)
+                {
+                    this.ourPlayer.netUser.user.displayname_ = value; // displayName
+                    this.ourPlayer.userName = value; // displayName
+                }
             }
         }
 
@@ -713,7 +712,10 @@
         {
             get
             {
-                return this.ourPlayer;
+                if (this.IsOnline)
+                    return this.ourPlayer;
+
+                return (PlayerClient)null;
             }
         }
 

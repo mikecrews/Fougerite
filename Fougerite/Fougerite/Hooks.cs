@@ -325,7 +325,7 @@
             ulong uid = user.userID;
             IDictionary<ulong, Fougerite.Player> playercache = Fougerite.Player.Cache;
             Fougerite.Server.GetServer().Players.Remove(playercache[uid]);
-            playercache[uid].OnDisconnect(uid);
+            playercache[uid].OnDisconnect();
             Logger.LogDebug("User Disconnected: " + playercache[uid].Name + " (" + playercache[uid].SteamID + ")");
 
             try
