@@ -267,6 +267,18 @@
                 }
                 return 0f;
             }
+            set
+            {
+                if (this.IsDeployableObject())
+                {
+                    this.GetObject<DeployableObject>().GetComponent<TakeDamage>().health = value;
+                }
+                else if (this.IsStructure())
+                {
+                    this.GetObject<StructureComponent>().GetComponent<TakeDamage>().health = value;
+                }
+            }
+
         }
 
         public int InstanceID
