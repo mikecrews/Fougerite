@@ -23,6 +23,31 @@
             }
         }
 
+        private void WrapWildlifeUpdateInTryCatch()
+        {
+            TypeDefinition type = rustAssembly.MainModule.GetType("WildlifeManager");
+            MethodDefinition update = type.GetMethod("Update");
+
+            TypeDefinition logger = fougeriteAssembly.MainModule.GetType("Fougerite.Logger");
+            MethodDefinition logex = logger.GetMethod("LogException");
+
+            WrapMethod(update, logex, rustAssembly);
+        }
+
+        private void uLinkLateUpdateInTryCatch()
+        {
+            AssemblyDefinition ulink = AssemblyDefinition.ReadAssembly("uLink.dll");
+            TypeDefinition type = ulink.MainModule.GetType("uLink.InternalHelper");
+            MethodDefinition update = type.GetMethod("LateUpdate");
+
+            TypeDefinition logger = fougeriteAssembly.MainModule.GetType("Fougerite.Logger");
+            MethodDefinition logex = logger.GetMethod("LogException");
+
+            WrapMethod(update, logex, ulink);
+
+            ulink.Write("uLink.dll");
+        }
+
         private void AntiDecay()
         {
             TypeDefinition type = rustAssembly.MainModule.GetType("EnvDecay");
@@ -53,6 +78,9 @@
 
             TypeDefinition StructureMaster = rustAssembly.MainModule.GetType("StructureMaster");
             StructureMaster.GetField("_structureComponents").SetPublic(true);
+
+            /*TypeDefinition wildlifeManager = rustAssembly.MainModule.GetType("WildlifeManager");
+            wildlifeManager.GetNestedType("Data").SetPublic(true);*/
         }
 
         private void BootstrapAttachPatch()
@@ -108,7 +136,7 @@
             ILProcessor iLProcessor = orig.Body.GetILProcessor();
             iLProcessor.InsertBefore(orig.Body.Instructions[0], Instruction.Create(OpCodes.Call, this.rustAssembly.MainModule.Import(method)));
             iLProcessor.InsertBefore(orig.Body.Instructions[0], Instruction.Create(OpCodes.Ldarga_S, orig.Parameters[0]));
-            
+
             iLProcessor = NPCKilled.Body.GetILProcessor();
             iLProcessor.InsertBefore(NPCKilled.Body.Instructions[0], Instruction.Create(OpCodes.Call, this.rustAssembly.MainModule.Import(NPCKilledHook)));
             iLProcessor.InsertBefore(NPCKilled.Body.Instructions[0], Instruction.Create(OpCodes.Ldarga_S, NPCKilled.Parameters[0]));
@@ -398,7 +426,7 @@
             iLProcessor.InsertAfter(definition3.Body.Instructions[90], Instruction.Create(OpCodes.Call, rustAssembly.MainModule.Import(method)));
         }
 
-        public bool FirstPass() 
+        public bool FirstPass()
         {
             try
             {
@@ -410,11 +438,11 @@
                     return false;
                 }
 
-                try 
+                try
                 {
                     this.FieldsUpdatePatch();
-                } 
-                catch (Exception ex) 
+                }
+                catch (Exception ex)
                 {
                     Logger.Log(ex);
                     flag = false;
@@ -446,7 +474,7 @@
             }
         }
 
-        public bool SecondPass() 
+        public bool SecondPass()
         {
             try
             {
@@ -462,8 +490,11 @@
                     return false;
                 }
 
-                try 
+                try
                 {
+                    this.WrapWildlifeUpdateInTryCatch();
+                    this.uLinkLateUpdateInTryCatch();
+
                     this.BootstrapAttachPatch();
                     this.NPCHurtKilledPatch_BasicWildLifeAI();
                     this.EntityDecayPatch_StructureMaster();
@@ -485,8 +516,8 @@
                     this.ItemsTablesLoadedPatch();
                     this.DoorSharing();
                     this.TalkerNotifications();
-                } 
-                catch (Exception ex) 
+                }
+                catch (Exception ex)
                 {
                     Logger.Log(ex);
                     flag = false;
@@ -518,11 +549,11 @@
             }
         }
 
-        private void WrapMethod(MethodDefinition md, MethodDefinition origMethod, AssemblyDefinition asm)
+        private void WrapMethod(MethodDefinition md, MethodDefinition origMethod, AssemblyDefinition asm, bool logEx = false)
         {
             Instruction instruction2;
             ILProcessor iLProcessor = md.Body.GetILProcessor();
-            Instruction instruction = Instruction.Create(OpCodes.Ldarg_0);
+            //Instruction instruction = Instruction.Create(OpCodes.Ldarg_0);
             if (md.ReturnType.Name == "Void")
             {
                 instruction2 = md.Body.Instructions[md.Body.Instructions.Count - 1];
@@ -531,12 +562,38 @@
             {
                 instruction2 = md.Body.Instructions[md.Body.Instructions.Count - 2];
             }
-            iLProcessor.InsertBefore(instruction2, instruction);
-            for (int i = 0; i < md.Parameters.Count; i++)
+            //iLProcessor.InsertBefore(instruction2, instruction);
+
+            iLProcessor.InsertBefore(instruction2, Instruction.Create(OpCodes.Nop));
+            iLProcessor.InsertBefore(instruction2, Instruction.Create(OpCodes.Leave, instruction2));
+
+            TypeReference type = AssemblyDefinition.ReadAssembly("mscorlib.dll").MainModule.GetType("System.Exception");
+            md.Body.Variables.Add(new VariableDefinition("ex", asm.MainModule.Import(type))); ;
+
+            Instruction instruction = null;
+            if (logEx)
             {
-                iLProcessor.InsertBefore(instruction2, Instruction.Create(OpCodes.Ldarga_S, md.Parameters[i]));
+                instruction = Instruction.Create(OpCodes.Stloc_0);
+                iLProcessor.InsertBefore(instruction2, instruction);
+                iLProcessor.InsertBefore(instruction2, Instruction.Create(OpCodes.Nop));
+                iLProcessor.InsertBefore(instruction2, Instruction.Create(OpCodes.Ldloc_0));
+                iLProcessor.InsertBefore(instruction2, Instruction.Create(OpCodes.Ldnull));
+
+                for (int i = 0; i < md.Parameters.Count; i++)
+                {
+                    iLProcessor.InsertBefore(instruction2, Instruction.Create(OpCodes.Ldarga_S, md.Parameters[i]));
+                }
+                iLProcessor.InsertBefore(instruction2, Instruction.Create(OpCodes.Call, asm.MainModule.Import(origMethod)));
             }
-            iLProcessor.InsertBefore(instruction2, Instruction.Create(OpCodes.Call, origMethod));
+            else
+            {
+                instruction = Instruction.Create(OpCodes.Nop);
+                iLProcessor.InsertBefore(instruction2, instruction);
+                iLProcessor.InsertBefore(instruction2, Instruction.Create(OpCodes.Nop));
+            }
+            iLProcessor.InsertBefore(instruction2, Instruction.Create(OpCodes.Nop));
+            iLProcessor.InsertBefore(instruction2, Instruction.Create(OpCodes.Leave, instruction2));
+
             ExceptionHandler item = new ExceptionHandler(ExceptionHandlerType.Catch);
             item.TryStart = md.Body.Instructions[0];
             item.TryEnd = instruction;
@@ -547,9 +604,8 @@
                 Instruction instruction3 = Instruction.Create(OpCodes.Ret);
                 iLProcessor.InsertBefore(instruction2, instruction3);
             }
-            TypeReference type = AssemblyDefinition.ReadAssembly("mscorlib.dll").MainModule.GetType("System.Exception");
+
             item.CatchType = asm.MainModule.Import(type);
             md.Body.ExceptionHandlers.Add(item);
         }
     }
-}

@@ -323,6 +323,21 @@
             {
                 return this.ourPlayer.controllable.health;
             }
+			set
+            {
+                if (!this.IsOnline)
+                    return;
+
+                if (value < 0f)
+                {
+                    this.ourPlayer.controllable.takeDamage.health = 0f;
+                }
+                else
+                {
+                    this.ourPlayer.controllable.takeDamage.health = value;
+                }
+                this.ourPlayer.controllable.takeDamage.Heal(this.ourPlayer.controllable, 0f);
+            }
         }
 
         public PlayerInv Inventory
@@ -491,6 +506,22 @@
                 this.name = value;
                 this.ourPlayer.netUser.user.displayname_ = value; // displayName
                 this.ourPlayer.userName = value; // displayName
+            }
+        }
+		
+		public Sleeper Sleeper
+        {
+            get
+            {
+                if (this.IsOnline)
+                    return (Sleeper)null;
+
+                var query = from sleeper in UnityEngine.Object.FindObjectsOfType<SleepingAvatar>()
+                            let deployable = sleeper.GetComponent<DeployableObject>()
+                            where deployable.ownerID == this.uid
+                            select new Sleeper(deployable);
+
+                return query.FirstOrDefault();
             }
         }
 

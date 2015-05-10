@@ -314,7 +314,7 @@
 
             if (Fougerite.Config.GetBoolValue("Fougerite", "tellversion"))
                 player.Message(string.Format("This server is powered by Fougerite v.{0}!", Bootstrap.Version));
-
+            Logger.LogDebug("User Connected: " + playercache[uid].Name + " (" + playercache[uid].SteamID + ")" + " (" + playercache[uid].IP + ")");
             return connected;
         }
 

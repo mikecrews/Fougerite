@@ -19,7 +19,7 @@
 
         public HurtEvent(ref DamageEvent d)
         {
-            Logger.LogDebug(string.Format("[DamageEvent] {0}", d.ToString()));
+            //Logger.LogDebug(string.Format("[DamageEvent] {0}", d.ToString()));
             this.DamageEvent = d;
             this.WeaponData = null;
             this.IsDecay = false;
