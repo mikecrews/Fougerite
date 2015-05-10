@@ -37,6 +37,14 @@
             this.ipaddr = client.netPlayer.externalIP;
             this.FixInventoryRef();
         }
+        
+        public void Damage(float dmg)
+        {
+            if (this.IsOnline)
+            {
+                TakeDamage.HurtSelf(this.PlayerClient.controllable.character, dmg);
+            }
+        }
 
         public void Disconnect()
         {
