@@ -301,6 +301,9 @@
                     obj2 = NetCull.InstantiateClassic(prefab, location, rotation, 0);
                 } else
                 {
+                    if (!prefab.StartsWith(";"))
+                        prefab = prefab.MatchItemName().Prefab();
+
                     GameObject obj3 = NetCull.InstantiateStatic(prefab, location, rotation);
                     obj2 = obj3;
                     StructureComponent component = obj3.GetComponent<StructureComponent>();

@@ -84,10 +84,10 @@
             if (string.IsNullOrEmpty(arg.ArgsStr))
                 return;
 
-            var quotedName = Facepunch.Utility.String.QuoteSafe(arg.argUser.displayName);
-            var quotedMessage = Facepunch.Utility.String.QuoteSafe(arg.GetString(0));
-            if (quotedMessage.Trim('"').StartsWith("/"))
-                Logger.LogDebug("[CHAT-CMD] " + quotedName + " executed " + quotedMessage);
+            var quotedName = arg.argUser.displayName.QuoteSafe();
+            var quotedMessage = arg.GetString(0).QuoteSafe();
+            if (arg.GetString(0).StartsWith("/"))
+                Logger.LogDebug(string.Format("[CHAT-CMD] {0} executed {1}", quotedName, quotedMessage));
 
             if (OnChatRaw != null)
                 OnChatRaw(ref arg);
@@ -110,14 +110,14 @@
                 if(OnChat != null)
                     OnChat(Fougerite.Player.FindByPlayerClient(arg.argUser.playerClient), ref chatstr);
 
-                string newchat = Facepunch.Utility.String.QuoteSafe(chatstr.NewText.Substring(1, chatstr.NewText.Length - 2)).Replace("\\\"", "" + '\u0022');
+                string newchat = chatstr.NewText.Substring(1, chatstr.NewText.Length - 2).QuoteSafe().Replace("\\\"", "" + '\u0022');
 
                 if (string.IsNullOrEmpty(newchat))
                     return;
 
                 Fougerite.Data.GetData().chat_history.Add(newchat);
                 Fougerite.Data.GetData().chat_history_username.Add(quotedName);                                                   
-                ConsoleNetworker.Broadcast("chat.add " + quotedName + " " + newchat);
+                ConsoleNetworker.Broadcast(string.Format("chat.add {0} {1}", quotedName, newchat));
             }
         }
 
@@ -291,46 +291,47 @@
         public static bool PlayerConnect(NetUser user)
         {
             bool connected = false;
+            IDictionary<ulong, Fougerite.Player> playercache = Fougerite.Player.Cache;
+            ulong uid = user.userID;
 
             if (user.playerClient == null) {
                 Logger.LogDebug("PlayerConnect user.playerClient is null");
                 return connected;
             }
 
-            Fougerite.Server server = Fougerite.Server.GetServer();
-            Fougerite.Player player = new Fougerite.Player(user.playerClient);
-            if (server.Players.Contains(player))
+            if (!playercache.ContainsKey(uid))
             {
-                Logger.LogError(string.Format("[PlayerConnect] Server.Players already contains {0} {1}", player.Name, player.SteamID));
-                connected = user.connected;
-                return connected;
+                playercache.Add(uid, new Fougerite.Player(user.playerClient));
             }
-            server.Players.Add(player);
+            else
+            {
+                playercache[uid].OnConnect(user);
+            }
+            Fougerite.Server.GetServer().Players.Add(playercache[uid]);
 
             if (OnPlayerConnected != null)
-                OnPlayerConnected(player);
+                OnPlayerConnected(playercache[uid]);
 
             connected = user.connected;
 
             if (Fougerite.Config.GetBoolValue("Fougerite", "tellversion"))
-                player.Message(string.Format("This server is powered by Fougerite v.{0}!", Bootstrap.Version));
+                playercache[uid].Message(string.Format("This server is powered by Fougerite v.{0}!", Bootstrap.Version));
 
             return connected;
         }
 
         public static void PlayerDisconnect(NetUser user)
         {
+            ulong uid = user.userID;
+            IDictionary<ulong, Fougerite.Player> playercache = Fougerite.Player.Cache;
+            Fougerite.Server.GetServer().Players.Remove(playercache[uid]);
+            playercache[uid].OnDisconnect();
+            Logger.LogDebug("User Disconnected: " + playercache[uid].Name + " (" + playercache[uid].SteamID + ")");
+
             try
             {
-                Fougerite.Player item = Fougerite.Player.FindByPlayerClient(user.playerClient);
-                if (item == null)
-                    return;
-
-                Fougerite.Server.GetServer().Players.Remove(item);
-                Logger.LogDebug("User Disconnected: " + item.Name + " (" + item.SteamID + ")");
                 if (OnPlayerDisconnected != null)
-                    OnPlayerDisconnected(item);
-
+                    OnPlayerDisconnected(playercache[uid]);
             }
             catch { }
         }
@@ -410,17 +411,25 @@
         public static bool PlayerKilled(ref DamageEvent de)
         {
             bool flag = false;
+            DeathEvent event2 = null;
             try
             {
-                DeathEvent event2 = new DeathEvent(ref de);
-                flag = event2.DropItems;
-                if (OnPlayerKilled != null)
-                    OnPlayerKilled(event2);
-
+                event2 = new DeathEvent(ref de);
                 flag = event2.DropItems;
             }
-            catch { }
- 
+            catch
+            { 
+                return flag;
+            }
+            if (OnPlayerKilled != null && event2 != null)
+            {
+                try
+                {
+                    OnPlayerKilled(event2);
+                    flag = event2.DropItems;
+                }
+                catch { }
+            }
             return flag;
         }
 

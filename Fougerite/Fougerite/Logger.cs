@@ -117,51 +117,57 @@ namespace Fougerite
 
         public static void Log(string Message, UnityEngine.Object Context = null)
         {
+            Message = string.Format("[Console] {0}", Message);
             Debug.Log(Message, Context);
-            Message = "[Console] " + Message;
             WriteLog(Message);
         }
 
         public static void LogWarning(string Message, UnityEngine.Object Context = null)
         {
+            Message = string.Format("[Warning] {0}", Message);
             Debug.LogWarning(Message, Context);
-            Message = "[Warning] " + Message;
             WriteLog(Message);
         }
 
         public static void LogError(string Message, UnityEngine.Object Context = null)
         {
             if (showErrors)
+            {
+                Message = string.Format("[Error] {0}", Message);
                 Debug.LogError(Message, Context);
-            Message = "[Error] " + Message;
-            WriteLog(Message);
+                WriteLog(Message);
+            }
         }
 
         public static void LogException(Exception Ex, UnityEngine.Object Context = null)
         {
             if (showException)
+            {
                 Debug.LogException(Ex, Context);
 
-            string Trace = "";
-            System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
-            for (int i = 1; i < stackTrace.FrameCount; i++)
-                Trace += stackTrace.GetFrame(i).GetMethod().DeclaringType.Name + "->" + stackTrace.GetFrame(i).GetMethod().Name + " | ";
+                string Trace = string.Empty;
+                System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
+                for (int i = 1; i < stackTrace.FrameCount; i++)
+                    Trace += string.Format("{0}->{1} | ", stackTrace.GetFrame(i).GetMethod().DeclaringType.Name, stackTrace.GetFrame(i).GetMethod().Name);
 
-            string Message = "[Exception] [ " + Trace + "]\r\n" + Ex.ToString();
-            WriteLog(Message);
+                string Message = string.Format("[Exception] [ {0}]\r\n{1}", Trace, Ex.ToString());
+                WriteLog(Message);
+            }
         }
 
         public static void LogDebug(string Message, UnityEngine.Object Context = null)
         {
             if (showDebug)
-                Debug.Log("[DEBUG] " + Message, Context);
-            Message = "[Debug] " + Message;
-            WriteLog(Message);
+            {
+                Message = string.Format("[Debug] {0}", Message);
+                Debug.Log(Message, Context);
+                WriteLog(Message);
+            }
         }
 
         public static void ChatLog(string Sender, string Msg)
         {
-            Msg = "[CHAT] " + Sender + ": " + Msg;
+            Msg = string.Format("[CHAT] {0}: {1}", Sender, Msg);
             Debug.Log(Msg);
             WriteChat(Msg);
         }

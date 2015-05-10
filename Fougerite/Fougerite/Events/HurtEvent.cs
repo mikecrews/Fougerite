@@ -38,13 +38,13 @@
             {
                 this._playerattacker = false;
                 this.Attacker = new Entity(d.attacker.idMain.GetComponent<DeployableObject>());
-                weaponName = d.attacker.id.ToString().Contains("Large") ? "Large Spike Wall" : "Spike Wall";
+                weaponName = (this.Attacker as Entity).Name;
             }
             else if (d.attacker.id is SupplyCrate)
             {
                 this._playerattacker = false;
                 this.Attacker = new Entity(d.attacker.idMain.gameObject);
-                weaponName = "Supply Crate";
+                weaponName = (this.Attacker as Entity).Name;
             }
             else if (d.attacker.id is Metabolism && d.victim.id is Metabolism)
             {
@@ -81,12 +81,12 @@
                 }
                 else
                 {
-                    weaponName = this.DamageType;
+                    weaponName = string.Format("Self ({0})", this.DamageType);
                 }
             }
             else if (d.attacker.client != null)
             {
-                this.Attacker = new Fougerite.Player(d.attacker.client);
+                this.Attacker = Fougerite.Player.FindByPlayerClient(d.attacker.client);
                 this._playerattacker = true;
                 if (d.attacker.id is TimedExplosive)
                 {
@@ -106,14 +106,31 @@
                     this.WeaponData = extraData;
                     if (extraData.dataBlock != null)
                     {
-                        weaponName = extraData.dataBlock.name;
+                        weaponName = extraData.dataBlock.name == "Unknown" ? "Hunting Bow" : extraData.dataBlock.name;
+                    } 
+                    else
+                    {
+                        weaponName = "Hunting Bow";
                     }
                 }
                 else if (d.victim.client != null)
                 {
                     if (!d.attacker.IsDifferentPlayer(d.victim.client))
                     {
-                        weaponName = "Fall Damage";
+                        var y = (this.Victim as Fougerite.Player).Y;
+                        var t = World.GetWorld().GetTerrainHeight((this.Victim as Fougerite.Player).Location);
+                        if (y < t)
+                        {
+                            weaponName = "Cheating";
+                        }
+                        else if (y < 255f && t < 255f)
+                        {
+                            weaponName = "Drowning";
+                        }
+                        else
+                        {
+                            weaponName = "Falling";
+                        }
                     }
                 }
                 else
@@ -127,7 +144,7 @@
                 this._playerattacker = false;
                 weaponName = string.Format("{0} Claw", (this.Attacker as NPC).Name);
             }
-            this.WeaponName = weaponName;
+            this.WeaponName = weaponName == "Unknown" ? "Be Afraid" : weaponName;
 
             if (d.victim.idMain is DeployableObject)
             {
