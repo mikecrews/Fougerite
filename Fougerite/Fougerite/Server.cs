@@ -16,6 +16,7 @@ namespace Fougerite
         private Dictionary<ulong, Fougerite.Player> players = new Dictionary<ulong, Fougerite.Player>();
         private static Fougerite.Server server;
         private bool HRustPP = false;
+        public static bool HRustBuster = false;
         public string server_message_name = "Fougerite";
         public static IDictionary<ulong, Fougerite.Player> Cache = new Dictionary<ulong, Fougerite.Player>();
         public static IEnumerable<string> ForceCallForCommands = new List<string>();
@@ -31,6 +32,19 @@ namespace Fougerite
                 HRustPP = true;
                 break;
             }
+        }
+
+        public static bool LookForRustBuster()
+        {
+            if (!HRustBuster)
+            {
+                foreach (ModuleContainer m in ModuleManager.Modules.Where(m => m.Plugin.Name.Equals("RustBuster2016Server")))
+                {
+                    HRustBuster = true;
+                    break;
+                }
+            }
+            return HRustBuster;
         }
 
         internal void UpdateBanlist()
