@@ -2184,7 +2184,16 @@ namespace Fougerite
                 sw = new Stopwatch();
                 sw.Start();
             }
+
             SteamDenyEvent sde = new SteamDenyEvent(cc, approval, strReason, errornum);
+
+            if (cc != null && cc.UserID == 76561197960266962)
+            {
+                strReason = "Default SteamID is being used, Unban Tool is needed";
+                errornum = NetError.DetectedDuplicatePlayerID;
+                sde.ForceAllow = false;
+            }
+
             try
             {
                 if (OnSteamDeny != null)
@@ -2196,15 +2205,18 @@ namespace Fougerite
             {
                 Logger.LogError("SteamDenyEvent Error: " + ex);
             }
-            if (sde.ForceAllow)
+
+            if (errornum == NetError.Facepunch_Connector_Cancelled && Server.LookForRustBuster() || sde.ForceAllow)
             {
+                sde.ForceAllow = true;
                 if (sw != null)
                 {
                     sw.Stop();
-                    if (sw.Elapsed.TotalSeconds > 0) Logger.LogSpeed("Airdrop Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
+                    if (sw.Elapsed.TotalSeconds > 0) Logger.LogSpeed("SteamDeny Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
                 }
                 return;
             }
+
             string deny = "Auth failed: " + strReason + " - " + cc.UserName + " (" +
                        cc.UserID.ToString() +
                        ")";
@@ -2212,6 +2224,7 @@ namespace Fougerite
             approval.Deny((uLink.NetworkConnectionError)errornum);
             ConnectionAcceptor.CloseConnection(cc);
             Rust.Steam.Server.OnUserLeave(cc.UserID);
+
             if (sw == null) return;
             sw.Stop();
             if (sw.Elapsed.TotalSeconds > 0) Logger.LogSpeed("SteamDeny Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
