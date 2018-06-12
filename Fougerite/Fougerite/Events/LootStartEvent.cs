@@ -7,6 +7,9 @@ using UnityEngine;
 
 namespace Fougerite.Events
 {
+    /// <summary>
+    /// This class is created when someone starts looting something.
+    /// </summary>
     public class LootStartEvent
     {
         private bool _cancel;
@@ -49,6 +52,13 @@ namespace Fougerite.Events
             _ue.Eject();
         }
 
+        /// <summary>
+        /// The cancel is done by a timer at the moment. AFAIK or remember the actual Use event is protected by
+        /// some sort of obfuscation. I will try to patch the method once again since the DLL is cleaned by de4dot.
+        /// The timer idea is a bit awful but does work flawlessly since I found that the _ue.callState = (FunctionCallState)0;
+        /// has to be set to eject the player. The original "position" changing stuff caused bugs before.
+        /// TODO: Patch and remove the timer cancel in 1.6.4
+        /// </summary>
         public void Cancel()
         {
             if (!_cancel)
@@ -62,6 +72,9 @@ namespace Fougerite.Events
             }
         }
 
+        /// <summary>
+        /// Checks if the stuff we are looting is a storage.
+        /// </summary>
         public bool IsObject
         {
             get
@@ -70,6 +83,9 @@ namespace Fougerite.Events
             }
         }
 
+        /// <summary>
+        /// Gets the Entity we are looting.
+        /// </summary>
         public Entity Entity
         {
             get
@@ -78,6 +94,9 @@ namespace Fougerite.Events
             }
         }
 
+        /// <summary>
+        /// Gets the player who is looting.
+        /// </summary>
         public Fougerite.Player Player
         {
             get
@@ -86,6 +105,9 @@ namespace Fougerite.Events
             }
         }
 
+        /// <summary>
+        /// Gets the Useable class.
+        /// </summary>
         public Useable Useable
         {
             get
@@ -94,6 +116,9 @@ namespace Fougerite.Events
             }
         }
 
+        /// <summary>
+        /// Gets the LootableObject class.
+        /// </summary>
         public LootableObject LootableObject
         {
             get
@@ -102,6 +127,9 @@ namespace Fougerite.Events
             }
         }
 
+        /// <summary>
+        /// Checks if the event is cancelled.
+        /// </summary>
         public bool IsCancelled
         {
             get
@@ -110,6 +138,9 @@ namespace Fougerite.Events
             }
         }
 
+        /// <summary>
+        /// Gets the lootable object's name.
+        /// </summary>
         public string LootName
         {
             get
@@ -118,6 +149,9 @@ namespace Fougerite.Events
             }
         }
 
+        /// <summary>
+        /// Gets the original Inventory class.
+        /// </summary>
         public Inventory RustInventory
         {
             get
@@ -126,6 +160,9 @@ namespace Fougerite.Events
             }
         }
 
+        /// <summary>
+        /// Can change the occupied text?
+        /// </summary>
         public string OccupiedText
         {
             get

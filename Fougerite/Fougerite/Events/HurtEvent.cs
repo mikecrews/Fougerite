@@ -4,6 +4,9 @@
     using System;
     using System.Collections.Generic;
 
+    /// <summary>
+    /// This class is created when a Player or an AI or an Entity is Hurt.
+    /// </summary>
     public class HurtEvent
     {
         private object _attacker;
@@ -192,6 +195,9 @@
             this.Entity = en;
         }
 
+        /// <summary>
+        /// Gets the Attacker of the event. Can be AI or Player or even decay.
+        /// </summary>
         public object Attacker
         {
             get
@@ -204,6 +210,9 @@
             }
         }
 
+        /// <summary>
+        /// Returns the lifestatus of the object.
+        /// </summary>
         public LifeStatus LifeStatus
         {
             get { return this._status; }
@@ -218,6 +227,9 @@
             }
         }
 
+        /// <summary>
+        /// Checks if the Victim object is a Sleeper.
+        /// </summary>
         public bool VictimIsSleeper
         {
             get
@@ -226,6 +238,9 @@
             }
         }
 
+        /// <summary>
+        /// Gets or Sets the Damage of the event.
+        /// </summary>
         public float DamageAmount
         {
             get
@@ -238,6 +253,9 @@
             }
         }
 
+        /// <summary>
+        /// Gets the original DamageEvent class.
+        /// </summary>
         public DamageEvent DamageEvent
         {
             get
@@ -250,6 +268,9 @@
             }
         }
 
+        /// <summary>
+        /// This gettertries to find the DamageType.
+        /// </summary>
         public string DamageType
         {
             get
@@ -288,6 +309,9 @@
             }
         }
 
+        /// <summary>
+        /// This grabs the Victim as an Entity. Null if the Victim is not an Entity. Use HurtEvent.Victim though.
+        /// </summary>
         public Fougerite.Entity Entity
         {
             get
@@ -300,6 +324,9 @@
             }
         }
 
+        /// <summary>
+        /// Checks if the attacker is decay.
+        /// </summary>
         public bool IsDecay
         {
             get
@@ -312,6 +339,9 @@
             }
         }
 
+        /// <summary>
+        /// Gets the Victim object. Can be AI, Player, Entity.
+        /// </summary>
         public object Victim
         {
             get
@@ -324,6 +354,9 @@
             }
         }
 
+        /// <summary>
+        /// Gets the original WeaponImpact class.
+        /// </summary>
         public WeaponImpact WeaponData
         {
             get
@@ -336,6 +369,9 @@
             }
         }
 
+        /// <summary>
+        /// Gets the weapon's name that caused the damage.
+        /// </summary>
         public string WeaponName
         {
             get
@@ -348,6 +384,9 @@
             }
         }
 
+        /// <summary>
+        /// Checks if the Victim object is a player.
+        /// </summary>
         public bool VictimIsPlayer
         {
             get
@@ -356,6 +395,9 @@
             }       
         }
 
+        /// <summary>
+        /// Checks if the Victim object is an Entity.
+        /// </summary>
         public bool VictimIsEntity
         {
             get
@@ -364,6 +406,9 @@
             }
         }
 
+        /// <summary>
+        /// Checks if the Victim object is an AI.
+        /// </summary>
         public bool VictimIsNPC
         {
             get
@@ -372,6 +417,9 @@
             }
         }
 
+        /// <summary>
+        /// Checks if the Attacker object is a player.
+        /// </summary>
         public bool AttackerIsPlayer
         {
             get
@@ -380,6 +428,9 @@
             }
         }
 
+        /// <summary>
+        /// Checks if the Attacker object is an Entity.
+        /// </summary>
         public bool AttackerIsEntity
         {
             get
@@ -388,6 +439,9 @@
             }
         }
 
+        /// <summary>
+        /// Checks if the Attacker object is metabolism (Hunger for example).
+        /// </summary>
         public bool AttackerIsMetabolism
         {
             get
@@ -396,6 +450,9 @@
             }
         }
 
+        /// <summary>
+        /// Checks if the Attacker object is an AI.
+        /// </summary>
         public bool AttackerIsNPC
         {
             get

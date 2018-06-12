@@ -5,6 +5,9 @@ using System.Text;
 
 namespace Fougerite.Events
 {
+    /// <summary>
+    /// This class is created when an item is being moved to a slot.
+    /// </summary>
     public class ItemMoveEvent
     {
         private readonly Inventory _from;
@@ -21,45 +24,73 @@ namespace Fougerite.Events
             _fslot = fromSlot;
             _tslot = toSlot;
             _iinfo = info;
-            foreach (uLink.NetworkPlayer netplayer in toInventory._netListeners)
+            if (toInventory._netListeners != null) // This is null when Rust is placing items.
             {
-                NetUser user = netplayer.GetLocalData() as NetUser;
-                if (user != null)
+                foreach (uLink.NetworkPlayer netplayer in toInventory._netListeners)
                 {
-                    if (Fougerite.Server.Cache.ContainsKey(user.userID))
+                    try
                     {
-                        _pl = Fougerite.Server.Cache[user.userID];
+                        NetUser user = netplayer.GetLocalData() as NetUser;
+                        if (user != null)
+                        {
+                            if (Fougerite.Server.Cache.ContainsKey(user.userID))
+                            {
+                                _pl = Fougerite.Server.Cache[user.userID];
+                            }
+                            break;
+                        }
                     }
-                    break;
+                    catch
+                    {
+                        //ignore
+                    }
                 }
             }
         }
 
+        /// <summary>
+        /// Gets the player of the event if possible.
+        /// </summary>
         public Fougerite.Player Player
         {
             get { return _pl; }
         }
 
+        /// <summary>
+        /// Gets the source inventory.
+        /// </summary>
         public Inventory FromInventory
         {
             get{ return _from; }
         }
 
+        /// <summary>
+        /// Gets the target inventory.
+        /// </summary>
         public Inventory ToInventory
         {
             get { return _to; }
         }
 
+        /// <summary>
+        /// Gets the slot where the item is being moved from
+        /// </summary>
         public int FromSlot
         {
             get { return _fslot; }
         }
 
+        /// <summary>
+        /// Gets the slot where the item is being moved to.
+        /// </summary>
         public int ToSlot
         {
             get { return _tslot; }
         }
 
+        /// <summary>
+        /// Gets the slot operation info.
+        /// </summary>
         public Inventory.SlotOperationsInfo SlotOperation
         {
             get { return _iinfo; }

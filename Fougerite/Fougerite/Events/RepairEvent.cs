@@ -5,6 +5,9 @@ using System.Text;
 
 namespace Fougerite.Events
 {
+    /// <summary>
+    /// This class is created when a Repair is done.
+    /// </summary>
     public class RepairEvent
     {
         private readonly Inventory _inv;
@@ -23,6 +26,9 @@ namespace Fougerite.Events
             }
         }
 
+        /// <summary>
+        /// Player who is performing the repair.
+        /// </summary>
         public Fougerite.Player Player
         {
             get
@@ -31,6 +37,9 @@ namespace Fougerite.Events
             }
         }
 
+        /// <summary>
+        /// Returns the original Inventory class
+        /// </summary>
         public Inventory Inv
         {
             get
@@ -39,6 +48,9 @@ namespace Fougerite.Events
             }
         }
 
+        /// <summary>
+        /// Returns the RepairBench class.
+        /// </summary>
         public RepairBench RepairBench
         {
             get
@@ -47,6 +59,17 @@ namespace Fougerite.Events
             }
         }
 
+        /// <summary>
+        /// Gets if the event was cancelled.
+        /// </summary>
+        public bool Cancelled
+        {
+            get { return _cancel; }
+        }
+
+        /// <summary>
+        /// Cancels the event.
+        /// </summary>
         public void Cancel()
         {
             if (_cancel)

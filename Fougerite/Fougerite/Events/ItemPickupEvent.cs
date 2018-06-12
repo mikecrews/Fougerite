@@ -6,95 +6,63 @@ using System.Timers;
 
 namespace Fougerite.Events
 {
+    /// <summary>
+    /// This class is created when an item is picked up.
+    /// </summary>
     public class ItemPickupEvent
     {
         private readonly Fougerite.Player _player;
         private readonly IInventoryItem _item;
         private readonly Inventory _inv;
-        private readonly Inventory.AddExistingItemResult _result;
-        private readonly bool _pickedup;
         private bool _cancelled;
         private Timer _delayer = null;
 
-        public ItemPickupEvent(Controllable controllable, IInventoryItem item, Inventory local, Inventory.AddExistingItemResult result)
+        public ItemPickupEvent(Controllable controllable, IInventoryItem item, Inventory local)
         {
             _player = Fougerite.Server.Cache[controllable.netUser.userID];
             _item = item;
             _inv = local;
-            _result = result;
-            switch (result)
-            {
-                case Inventory.AddExistingItemResult.CompletlyStacked:
-                    _pickedup = true;
-                    break;
-
-                case Inventory.AddExistingItemResult.Moved:
-                    _pickedup = true;
-                    break;
-
-                case Inventory.AddExistingItemResult.PartiallyStacked:
-                    _pickedup = true;
-                    break;
-
-                case Inventory.AddExistingItemResult.Failed:
-                    _pickedup = false;
-                    break;
-
-                case Inventory.AddExistingItemResult.BadItemArgument:
-                    _pickedup = false;
-                    break;
-
-                default:
-                    _pickedup = false;
-                    break;
-            }
         }
 
+        /// <summary>
+        /// The player who is picking the item up.
+        /// </summary>
         public Fougerite.Player Player
         {
             get { return _player; }
         }
 
+        /// <summary>
+        /// The item we are picking up.
+        /// </summary>
         public IInventoryItem Item
         {
             get { return _item; }
         }
 
+        /// <summary>
+        /// The inventory where the item is going to be placed.
+        /// </summary>
         public Inventory Inventory
         {
             get { return _inv; }
         }
 
-        public Inventory.AddExistingItemResult Result
-        {
-            get { return _result; }
-        }
-
-        public bool PickedkUp
-        {
-            get { return _pickedup; }
-        }
-
+        /// <summary>
+        /// Is the event cancelled?
+        /// </summary>
         public bool Cancelled
         {
             get { return _cancelled; }
         }
 
+        /// <summary>
+        /// Cancels the event.
+        /// </summary>
         public void Cancel()
         {
-            if (Cancelled || !_pickedup) { return; }
-            // Timer is required, since rust doesn't update the player's inventory immediately.
-            _delayer = new Timer(500);
-            _delayer.Elapsed += CancelDelay;
-            _delayer.Start();
-        }
-
-        internal void CancelDelay(object sender, ElapsedEventArgs e)
-        {
-            _delayer.Stop();
-            _delayer.Dispose();
+            if (_cancelled) return;
             _cancelled = true;
-            Player.Inventory.DropItem(_item.slot);
         }
     }
 }

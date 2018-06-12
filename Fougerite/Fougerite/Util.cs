@@ -14,14 +14,17 @@ namespace Fougerite
     using System.Text.RegularExpressions;
     using UnityEngine;
 
+    /// <summary>
+    /// This class contains some useful methods.
+    /// </summary>
     public class Util
     {
         private readonly Dictionary<string, System.Type> typeCache = new Dictionary<string, System.Type>();
         private static Util util;
-
-        /*
-         * All UnStackable Items
-         */
+        
+        /// <summary>
+        /// All unstackable item names in rust legacy.
+        /// </summary>
         public static readonly string[] UStackable = new string[]
         {
             "Spike Wall", "Large Spike Wall", "Wood Gate",
@@ -37,9 +40,9 @@ namespace Fougerite
             "Blood Draw Kit", "Supply Signal", "Research Kit 1", "Uber Hatchet", "Uber Hunting Bow"
         };
 
-        /*
-         * Player actions sent by PlayerMove event.
-         */
+        /// <summary>
+        /// PlayerActions that I debuged myself. These are sent by the On_PlayerMove event.
+        /// </summary>
         public enum PlayerActions
         {
             Standing = 4096,
@@ -71,6 +74,11 @@ namespace Fougerite
         [DllImport("kernel32")]
         public extern static ulong GetTickCount64();
 
+        /// <summary>
+        /// Sends a console message to everyone.
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="adminOnly"></param>
         public void ConsoleLog(string str, [Optional, DefaultParameterValue(false)] bool adminOnly)
         {
             try {
@@ -86,6 +94,12 @@ namespace Fougerite
             } catch { }
         }
 
+        /// <summary>
+        /// Creates an array. Useful for JS plugins.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
         public object CreateArrayInstance(string name, int size)
         {
             System.Type type;
@@ -98,6 +112,12 @@ namespace Fougerite
             return Array.CreateInstance(type, size);
         }
 
+        /// <summary>
+        /// Tries to create an instance to the specified class.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
         public object CreateInstance(string name, params object[] args)
         {
             System.Type type;
@@ -110,27 +130,75 @@ namespace Fougerite
             return Activator.CreateInstance(type, args);
         }
 
+        /// <summary>
+        /// Creates a Quaterion
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <param name="w"></param>
+        /// <returns></returns>
         public Quaternion CreateQuat(float x, float y, float z, float w)
         {
             return new Quaternion(x, y, z, w);
         }
 
+        /// <summary>
+        /// Creates a Vector3
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <returns></returns>
         public Vector3 CreateVector(float x, float y, float z)
         {
             return new Vector3(x, y, z);
         }
 
+        /// <summary>
+        /// Creates a Vector2
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
         public Vector2 CreateVector2(float x, float y)
         {
             return new Vector2(x, y);
         }
 
+        /// <summary>
+        /// Tries to parse a string to Vector2.
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public Vector2 ConvertStringToVector2(string s)
+        {
+            try
+            {
+                s = s.Replace("(", "").Replace(")", "").Replace(" ", "");
+                var spl = s.Split(',');
+                float f1, f2;
+                float.TryParse(spl[0], out f1);
+                float.TryParse(spl[1], out f2);
+                return new Vector2(f1, f2);
+            }
+            catch
+            {
+                return Vector2.zero;
+            }
+        }
+        
+        /// <summary>
+        /// Tries to parse a string to Vector3
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
         public Vector3 ConvertStringToVector3(string s)
         {
             try
             {
                 s = s.Replace("(", "").Replace(")", "").Replace(" ", "");
-                var spl = s.Split(Convert.ToChar(","));
+                var spl = s.Split(',');
                 float f1, f2, f3;
                 float.TryParse(spl[0], out f1);
                 float.TryParse(spl[1], out f2);
@@ -143,37 +211,70 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Uses Netcull to Destroy a gameobject.
+        /// </summary>
+        /// <param name="go"></param>
         public void DestroyObject(GameObject go)
         {
             NetCull.Destroy(go);
         }
 
+        /// <summary>
+        /// Clears up the unneccessary \ signs.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public static string NormalizePath(string path)
         {
             string normal = path.Replace(@"\\", @"\").Replace(@"//", @"/").Trim();
             return normal;
         }
 
+        /// <summary>
+        /// Gets the path of the file.
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
         public static string GetAbsoluteFilePath(string fileName)
         {
             return Path.Combine(Config.GetPublicFolder(), fileName);
         }
 
+        /// <summary>
+        /// Gets the root folder where rust server exe is located.
+        /// </summary>
+        /// <returns></returns>
         public static string GetRootFolder()
         {
             return Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)));
         }
-
+        
+        /// <summary>
+        /// Gets the filepath to rust_server_Data folder.
+        /// </summary>
+        /// <returns></returns>
         public static string GetServerFolder()
         {
             return Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location))), "rust_server_Data");
         }
 
+        /// <summary>
+        /// Tries to get the arguments by quoting them using Facepunch api.
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
         public string[] GetQuotedArgs(string s)
         {
-            return Facepunch.Utility.String.SplitQuotesStrings(s.Trim(Convert.ToChar("\\")));
+            return Facepunch.Utility.String.SplitQuotesStrings(s.Trim('\\'));
         }
 
+        /// <summary>
+        /// Tries to get the variable's value using reflection
+        /// </summary>
+        /// <param name="className"></param>
+        /// <param name="field"></param>
+        /// <returns></returns>
         public object GetStaticField(string className, string field)
         {
             System.Type type;
@@ -186,6 +287,10 @@ namespace Fougerite
             return null;
         }
 
+        /// <summary>
+        /// Returns the Util's instance.
+        /// </summary>
+        /// <returns></returns>
         public static Util GetUtil()
         {
             if (util == null) {
@@ -194,16 +299,33 @@ namespace Fougerite
             return util;
         }
 
+        /// <summary>
+        /// Gets the distance between 2 Vector3s
+        /// </summary>
+        /// <param name="v1"></param>
+        /// <param name="v2"></param>
+        /// <returns></returns>
         public float GetVectorsDistance(Vector3 v1, Vector3 v2)
         {
             return Vector3.Distance(v1, v2);
         }
 
+        /// <summary>
+        /// Gets the distance between 2 Vector2s
+        /// </summary>
+        /// <param name="v1"></param>
+        /// <param name="v2"></param>
+        /// <returns></returns>
         public float GetVector2sDistance(Vector2 v1, Vector2 v2)
         {
             return Vector2.Distance(v1, v2);
         }
 
+        /// <summary>
+        /// Gets the eyerays of a player.
+        /// </summary>
+        /// <param name="player"></param>
+        /// <returns></returns>
         public Ray GetEyesRay(Fougerite.Player player)
         {
             if (player.Character == null)
@@ -216,6 +338,10 @@ namespace Fougerite
             return new Ray(position, direction);
         }
 
+        /// <summary>
+        /// Gets the last save file of the server.
+        /// </summary>
+        /// <returns></returns>
         public string GetLastSaveFile()
         {
             FileInfo info = null;
@@ -238,6 +364,14 @@ namespace Fougerite
             return null;
         }
 
+        /// <summary>
+        /// Gets the object that is in line between two vectors.
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <param name="point"></param>
+        /// <param name="layerMask"></param>
+        /// <returns></returns>
         public GameObject GetLineObject(Vector3 start, Vector3 end, out Vector3 point, int layerMask = -1)
         {
             RaycastHit hit;
@@ -253,6 +387,12 @@ namespace Fougerite
             return ((main != null) ? main.gameObject : hit.collider.gameObject);
         }
 
+        /// <summary>
+        /// Gets the object that the player is looking at.
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="layerMask"></param>
+        /// <returns></returns>
         public GameObject GetLookObject(Fougerite.Player player, int layerMask = -1)
         {
             if (player.Character == null)
@@ -265,12 +405,27 @@ namespace Fougerite
             return GetLookObject(new Ray(position, direction), 300f, -1);
         }
 
+        /// <summary>
+        /// Gets the object where the ray is going at.
+        /// </summary>
+        /// <param name="ray"></param>
+        /// <param name="distance"></param>
+        /// <param name="layerMask"></param>
+        /// <returns></returns>
         public GameObject GetLookObject(Ray ray, float distance = 300f, int layerMask = -1)
         {
             Vector3 zero = Vector3.zero;
             return GetLookObject(ray, out zero, distance, layerMask);
         }
 
+        /// <summary>
+        /// Gets the object where the ray is going at.
+        /// </summary>
+        /// <param name="ray"></param>
+        /// <param name="point"></param>
+        /// <param name="distance"></param>
+        /// <param name="layerMask"></param>
+        /// <returns></returns>
         public GameObject GetLookObject(Ray ray, out Vector3 point, float distance = 300f, int layerMask = -1)
         {
             RaycastHit hit;
@@ -286,6 +441,11 @@ namespace Fougerite
             return ((main != null) ? main.gameObject : hit.collider.gameObject);
         }
 
+        /// <summary>
+        /// Gets the object where the player is looking at.
+        /// </summary>
+        /// <param name="player"></param>
+        /// <returns></returns>
         public Ray GetLookRay(Fougerite.Player player)
         {
             if (player.Character == null)
@@ -412,6 +572,12 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets a Vector3 x meters away from the player.
+        /// </summary>
+        /// <param name="p"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
         public Vector3 Infront(Fougerite.Player p, float length)
         {
             return (p.PlayerClient.controllable.transform.position + ((Vector3)(p.PlayerClient.controllable.transform.forward * length)));
@@ -439,6 +605,10 @@ namespace Fougerite
             return (obj == null);
         }
 
+        /// <summary>
+        /// Logs to the console and to the Fougerite logs.
+        /// </summary>
+        /// <param name="str"></param>
         public void Log(string str)
         {
             Logger.Log(str);
@@ -518,6 +688,12 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Splits the string to the specified amount of parts.
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="partLength"></param>
+        /// <returns></returns>
         public IEnumerable<string> SplitInParts(string s, int partLength)
         {
             if (string.IsNullOrEmpty(s) || partLength <= 0) yield return null;
@@ -531,6 +707,12 @@ namespace Fougerite
             return ts;
         }
 
+        /// <summary>
+        /// Tries to find the specified Class type in through the loaded assemblies. Useful for Scripting languages.
+        /// </summary>
+        /// <param name="typeName"></param>
+        /// <param name="t"></param>
+        /// <returns></returns>
         public bool TryFindType(string typeName, out System.Type t)
         {
             lock (this.typeCache) {
@@ -547,6 +729,12 @@ namespace Fougerite
             return (t != null);
         }
 
+        /// <summary>
+        /// Tries to find the specified Class type in through the loaded assemblies. Useful for Scripting languages.
+        /// </summary>
+        /// <param name="typeName"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         public System.Type TryFindReturnType(string typeName)
         {
             System.Type t;
@@ -579,6 +767,7 @@ namespace Fougerite
             return FindDeployableAt(givenPosition, dist, forceupdate);
         }
 
+        [System.Obsolete("Use FindClosestEntity, and distinguish between the object types.", false)]
         public Entity FindDeployableAt(Vector3 givenPosition, float dist = 1f, bool forceupdate = false)
         {
             foreach (var x in World.GetWorld().DeployableObjects(forceupdate))
@@ -588,6 +777,7 @@ namespace Fougerite
             return null;
         }
 
+        [System.Obsolete("Use FindClosestEntity, and distinguish between the object types.", false)]
         public Entity FindDoorAt(Vector3 givenPosition, float dist = 2f, bool forceupdate = false)
         {
             foreach (var x in World.GetWorld().BasicDoors(forceupdate))
@@ -597,6 +787,7 @@ namespace Fougerite
             return null;
         }
 
+        [System.Obsolete("Use FindClosestEntity, and distinguish between the object types.", false)]
         public Entity FindStructureAt(Vector3 givenPosition, float dist = 1f, bool forceupdate = false)
         {
             foreach (var x in World.GetWorld().StructureComponents(forceupdate))
@@ -606,6 +797,7 @@ namespace Fougerite
             return null;
         }
 
+        [System.Obsolete("Use FindClosestEntity, and distinguish between the object types.", false)]
         public Entity FindLootableAt(Vector3 givenPosition, float dist = 1f)
         {
             foreach (var x in World.GetWorld().LootableObjects)
@@ -615,6 +807,7 @@ namespace Fougerite
             return null;
         }
 
+        [System.Obsolete("Use FindClosestEntity, and distinguish between the object types.", false)]
         public Entity FindEntityAt(Vector3 givenPosition, float dist = 1f)
         {
             foreach (var x in World.GetWorld().Entities)
@@ -624,6 +817,141 @@ namespace Fougerite
             return null;
         }
 
+        /// <summary>
+        /// Finds the closest gameobject that is convertible to an Entity.
+        /// </summary>
+        /// <param name="givenPosition"></param>
+        /// <param name="dist"></param>
+        /// <returns></returns>
+        public Entity FindClosestEntity(Vector3 givenPosition, float dist = 1f)
+        {
+            Collider[] array = Facepunch.MeshBatch.MeshBatchPhysics.OverlapSphere(givenPosition, dist);
+            if (array.Length == 0)
+            {
+                return null;
+            }
+            Collider closest = array[0];
+            if (array.Length > 1)
+            {
+                for (int i = 1; i < array.Length; i++)
+                {
+                    if (Vector3.Distance(array[i].transform.position, givenPosition) <
+                        Vector3.Distance(closest.transform.position, givenPosition))
+                    {
+                        closest = array[i];
+                    }
+                }
+            }
+
+            if (closest.gameObject.GetComponent<StructureMaster>())
+            {
+                return new Entity(closest.gameObject.GetComponent<StructureMaster>());
+            }
+            if (closest.gameObject.GetComponent<StructureComponent>())
+            {
+                return new Entity(closest.gameObject.GetComponent<StructureComponent>());
+            }
+            if (closest.gameObject.GetComponent<DeployableObject>())
+            {
+                return new Entity(closest.gameObject.GetComponent<DeployableObject>());
+            }
+            if (closest.gameObject.GetComponent<LootableObject>())
+            {
+                return new Entity(closest.gameObject.GetComponent<LootableObject>());
+            }
+            if (closest.gameObject.GetComponent<SupplyCrate>())
+            {
+                return new Entity(closest.gameObject.GetComponent<SupplyCrate>());
+            }
+            if (closest.gameObject.GetComponent<ResourceTarget>())
+            {
+                return new Entity(closest.gameObject.GetComponent<ResourceTarget>());
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Finds the objects within a range that are convertable to the Entity class.
+        /// </summary>
+        /// <param name="givenPosition"></param>
+        /// <param name="dist"></param>
+        /// <returns></returns>
+        public List<Entity> FindEntitysAroundFast(Vector3 givenPosition, float dist = 1f)
+        {
+            Collider[] array = Facepunch.MeshBatch.MeshBatchPhysics.OverlapSphere(givenPosition, dist);
+            List<Entity> list = new List<Entity>();
+            foreach (var x in array)
+            {
+                if (x.gameObject.GetComponent<StructureMaster>())
+                {
+                    list.Add(new Entity(x.gameObject.GetComponent<StructureMaster>()));
+                }
+                else if (x.gameObject.GetComponent<StructureComponent>())
+                {
+                    list.Add(new Entity(x.gameObject.GetComponent<StructureComponent>()));
+                }
+                else if (x.gameObject.GetComponent<DeployableObject>())
+                {
+                    list.Add(new Entity(x.gameObject.GetComponent<DeployableObject>()));
+                }
+                else if (x.gameObject.GetComponent<LootableObject>())
+                {
+                    list.Add(new Entity(x.gameObject.GetComponent<LootableObject>()));
+                }
+                else if (x.gameObject.GetComponent<SupplyCrate>())
+                {
+                    list.Add(new Entity(x.gameObject.GetComponent<SupplyCrate>()));
+                }
+                else if (x.gameObject.GetComponent<ResourceTarget>())
+                {
+                    list.Add(new Entity(x.gameObject.GetComponent<ResourceTarget>()));
+                }
+            }
+            return list;
+        }
+        
+        /// <summary>
+        /// Finds the closest object to the given position.
+        /// </summary>
+        /// <param name="givenPosition"></param>
+        /// <param name="dist"></param>
+        /// <returns></returns>
+        public GameObject FindClosestObject(Vector3 givenPosition, float dist = 1f)
+        {
+            Collider[] array = Facepunch.MeshBatch.MeshBatchPhysics.OverlapSphere(givenPosition, dist);
+            if (array.Length == 0)
+            {
+                return null;
+            }
+            Collider closest = array[0];
+            if (array.Length > 1)
+            {
+                for (int i = 1; i < array.Length; i++)
+                {
+                    if (Vector3.Distance(array[i].transform.position, givenPosition) <
+                        Vector3.Distance(closest.transform.position, givenPosition))
+                    {
+                        closest = array[i];
+                    }
+                }
+            }
+            return closest.gameObject; // Specific Entities can be converted to Entity, see the Entity class's constructor. (Example: It doesn't handle BasicDoor.)
+        }
+        
+        /// <summary>
+        /// Find the closest objects that are within the specified range.
+        /// </summary>
+        /// <param name="givenPosition"></param>
+        /// <param name="dist"></param>
+        /// <returns></returns>
+        public List<GameObject> FindObjectsAroundFast(Vector3 givenPosition, float dist = 1f)
+        {
+            Collider[] array = Facepunch.MeshBatch.MeshBatchPhysics.OverlapSphere(givenPosition, dist);
+            return array.Select(x => x.gameObject).ToList();
+        }
+
+
+        [System.Obsolete("Use FindClosestEntity, and distinguish between the object types.", false)]
         public List<Entity> FindDeployablesAround(Vector3 givenPosition, float dist = 100f, bool forceupdate = false)
         {
             List<Entity> l = new List<Entity>();
@@ -634,6 +962,7 @@ namespace Fougerite
             return l;
         }
 
+        [System.Obsolete("Use FindClosestEntity, and distinguish between the object types.", false)]
         public List<Entity> FindDoorsAround(Vector3 givenPosition, float dist = 100f, bool forceupdate = false)
         {
             List<Entity> l = new List<Entity>();
@@ -644,6 +973,7 @@ namespace Fougerite
             return l;
         }
 
+        [System.Obsolete("Use FindClosestEntity, and distinguish between the object types.", false)]
         public List<Entity> FindStructuresAround(Vector3 givenPosition, float dist = 100f, bool forceupdate = false)
         {
             List<Entity> l = new List<Entity>();
@@ -654,6 +984,7 @@ namespace Fougerite
             return l;
         }
 
+        [System.Obsolete("Use FindClosestEntity, and distinguish between the object types.", false)]
         public List<Entity> FindLootablesAround(Vector3 givenPosition, float dist = 100f)
         {
             List<Entity> l = new List<Entity>();
@@ -664,6 +995,7 @@ namespace Fougerite
             return l;
         }
 
+        [System.Obsolete("Use FindClosestEntity, and distinguish between the object types.", false)]
         public List<Entity> FindEntitiesAround(Vector3 givenPosition, float dist = 100f)
         {
             List<Entity> l = new List<Entity>();
@@ -698,6 +1030,13 @@ namespace Fougerite
             return FindDoorAt(new Vector3(x, y, z));
         }
 
+        /// <summary>
+        /// Gets the specified variable's value from the instance using reflection.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="instance"></param>
+        /// <param name="fieldName"></param>
+        /// <returns></returns>
         public object GetInstanceField(Type type, object instance, string fieldName)
         {
             BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
@@ -715,6 +1054,13 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Sets the specified variable's value in the instance using reflection.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="instance"></param>
+        /// <param name="fieldName"></param>
+        /// <param name="val"></param>
         public void SetInstanceField(Type type, object instance, string fieldName, object val)
         {
             BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic

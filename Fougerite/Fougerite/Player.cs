@@ -11,10 +11,15 @@ namespace Fougerite
     using System.Collections.Generic;
     using UnityEngine;
 
+    /// <summary>
+    /// Represents an ONLINE player.
+    /// </summary>
     public class Player
     {
         private long connectedAt;
         private readonly long connectedAt2;
+        private readonly double connectedAtSeconds;
+        private long disconnecttime = -1;
         private PlayerInv inv;
         private bool invError;
         private bool justDied;
@@ -25,6 +30,8 @@ namespace Fougerite
         private readonly List<string> _CommandCancelList;
         private bool disconnected;
         private Vector3 _lastpost;
+        internal bool _adminoff = false;
+        internal bool _modoff = false;
         internal uLink.NetworkPlayer _np;
 
         public Player()
@@ -39,6 +46,7 @@ namespace Fougerite
             this.ourPlayer = client;
             this.connectedAt = DateTime.UtcNow.Ticks;
             this.connectedAt2 = System.Environment.TickCount;
+            this.connectedAtSeconds = TimeSpan.FromTicks(DateTime.Now.Ticks).TotalSeconds;
             this.uid = client.netUser.userID;
             this.name = client.netUser.displayName;
             this.ipaddr = client.netPlayer.externalIP;
@@ -57,6 +65,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Returns if the player is Online.
+        /// </summary>
         public bool IsOnline
         {
             get
@@ -73,6 +84,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Returns if the player is alive.
+        /// </summary>
         public bool IsAlive
         {
             get
@@ -85,40 +99,67 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Returns if the player is disconnecting or disconnected. You may want to use IsOnline instead.
+        /// </summary>
         public bool IsDisconnecting
         {
             get { return disconnected; }
             set { disconnected = value; }
         }
 
+        /// <summary>
+        /// Returns the Character of the player.
+        /// </summary>
         public Character Character
         {
             get
             {
                 if (this.IsOnline)
                 {
-                    Character c = this.PlayerClient.netUser.playerClient.GetComponent(typeof(Character)) as Character;
+                    Character c = this.PlayerClient.controllable.GetComponent<Character>();
                     return c;
                 }
                 return null;
             }
         }
 
+        /// <summary>
+        /// Gets the uLink.NetworkPlayer class of this player.
+        /// </summary>
         public uLink.NetworkPlayer NetworkPlayer
         {
             get { return this._np; }
         }
 
+        /// <summary>
+        /// Returns the time when this player connected in DateTime.UtcNow.Ticks.
+        /// </summary>
         public long ConnectedAt
         {
             get { return this.connectedAt; }
         }
 
+        /// <summary>
+        /// Returns the time when this player connected in System.Environment.Ticks
+        /// </summary>
         public long ConnectedAt2
         {
             get { return this.connectedAt2; }
         }
 
+        /// <summary>
+        /// Returns the time when this player connected in TimeSpan.FromTicks(DateTime.Now.Ticks).TotalSeconds
+        /// </summary>
+        public double ConnectedAtSeconds
+        {
+            get { return this.connectedAtSeconds; }
+        }
+
+        /// <summary>
+        /// Deals a specific amount of damage to the player.
+        /// </summary>
+        /// <param name="dmg"></param>
         public void Damage(float dmg)
         {
             if (this.IsOnline)
@@ -142,11 +183,21 @@ namespace Fougerite
             this.justDied = false;
         }
 
+        /// <summary>
+        /// Disconnects the player from the server.
+        /// </summary>
         public void Disconnect()
         {
-            Disconnect(true);
+            if (this.IsOnline)
+            {
+                Disconnect(true);
+            }
         }
 
+        /// <summary>
+        /// Disconnects the player from the server.
+        /// </summary>
+        /// <param name="SendNotification"></param>
         public void Disconnect(bool SendNotification = true)
         {
             if (this.IsOnline)
@@ -167,6 +218,10 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// The specified command cannot be used by this player.
+        /// </summary>
+        /// <param name="cmd"></param>
         public void RestrictCommand(string cmd)
         {
             if (!CommandCancelList.Contains(cmd))
@@ -175,6 +230,10 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// The specified command will be unrestricted and the player will be able to use It again.
+        /// </summary>
+        /// <param name="cmd"></param>
         public void UnRestrictCommand(string cmd)
         {
             if (CommandCancelList.Contains(cmd))
@@ -183,36 +242,69 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Does what It says.
+        /// </summary>
         public void CleanRestrictedCommands()
         {
             CommandCancelList.Clear();
         }
 
+        /// <summary>
+        /// Finds a specific player by your argument. Can state name or ID.
+        /// </summary>
+        /// <param name="search"></param>
+        /// <returns></returns>
         public Fougerite.Player Find(string search)
         {
             return Search(search);
         }
 
+        /// <summary>
+        /// Finds a specific player by your argument. Can state name or ID.
+        /// </summary>
+        /// <param name="search"></param>
+        /// <returns></returns>
         public static Fougerite.Player Search(string search)
         {
             return Fougerite.Server.GetServer().FindPlayer(search);
         }
 
+        /// <summary>
+        /// Finds a specific player by your argument. Can state name or ID.
+        /// </summary>
+        /// <param name="search"></param>
+        /// <returns></returns>
         public static Fougerite.Player FindBySteamID(string search)
         {
             return Fougerite.Server.GetServer().FindPlayer(search);
         }
 
+        /// <summary>
+        /// Finds a specific player by your argument. Can state name or ID.
+        /// </summary>
+        /// <param name="search"></param>
+        /// <returns></returns>
         public static Fougerite.Player FindByGameID(string search)
         {
             return FindBySteamID(search);
         }
-
+        
+        /// <summary>
+        /// Finds a specific player by your argument. Can state name or ID.
+        /// </summary>
+        /// <param name="search"></param>
+        /// <returns></returns>
         public static Fougerite.Player FindByName(string search)
         {
             return Fougerite.Server.GetServer().FindPlayer(search);
         }
 
+        /// <summary>
+        /// Finds the player by stating uLink.NetworkPlayer
+        /// </summary>
+        /// <param name="np"></param>
+        /// <returns></returns>
         public static Fougerite.Player FindByNetworkPlayer(uLink.NetworkPlayer np)
         {
             foreach (var x in Fougerite.Server.GetServer().Players)
@@ -222,6 +314,11 @@ namespace Fougerite
             return null;
         }
 
+        /// <summary>
+        /// Finds the player by stating PlayerClient
+        /// </summary>
+        /// <param name="pc"></param>
+        /// <returns></returns>
         public static Fougerite.Player FindByPlayerClient(PlayerClient pc)
         {
             foreach (var x in Fougerite.Server.GetServer().Players)
@@ -231,6 +328,9 @@ namespace Fougerite
             return null;
         }
 
+        /// <summary>
+        /// This is an inventory reference fix that fougerite uses.
+        /// </summary>
         public void FixInventoryRef()
         {
             Hooks.OnPlayerKilled += new Hooks.KillHandlerDelegate(this.Hooks_OnPlayerKilled);
@@ -252,6 +352,10 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Creates an Inventory Notice message on the right.
+        /// </summary>
+        /// <param name="arg"></param>
         public void InventoryNotice(string arg)
         {
             if (this.IsOnline)
@@ -260,6 +364,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Kills the player.
+        /// </summary>
         public void Kill()
         {
             if (this.IsOnline)
@@ -268,6 +375,10 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Sends a message to the player.
+        /// </summary>
+        /// <param name="arg"></param>
         public void Message(string arg)
         {
             if (this.IsOnline)
@@ -309,6 +420,11 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Sends a message to the player with the specified name "sender".
+        /// </summary>
+        /// <param name="playername"></param>
+        /// <param name="arg"></param>
         public void MessageFrom(string playername, string arg)
         {
             if (this.IsOnline)
@@ -348,6 +464,10 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Sends a notice message to the middle of the screen.
+        /// </summary>
+        /// <param name="arg"></param>
         public void Notice(string arg)
         {
             if (this.IsOnline)
@@ -356,6 +476,12 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Sends a notice message to the middle of the screen with specified duration and icon.
+        /// </summary>
+        /// <param name="icon"></param>
+        /// <param name="text"></param>
+        /// <param name="duration"></param>
         public void Notice(string icon, string text, float duration = 4f)
         {
             if (this.IsOnline)
@@ -364,6 +490,22 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Sends a console message to the player.
+        /// </summary>
+        /// <param name="msg"></param>
+        public void SendConsoleMessage(string msg)
+        {
+            if (this.IsOnline)
+            {
+                ConsoleNetworker.singleton.networkView.RPC<string>("CL_ConsoleMessage", PlayerClient.netPlayer, msg);
+            }
+        }
+
+        /// <summary>
+        /// Sends a console command to the player.
+        /// </summary>
+        /// <param name="cmd"></param>
         public void SendCommand(string cmd)
         {
             if (this.IsOnline)
@@ -372,6 +514,13 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Teleports the player to another player. Distance is how far from the target player. You may also disable the OnPlayerTeleport hook call.
+        /// </summary>
+        /// <param name="p"></param>
+        /// <param name="distance"></param>
+        /// <param name="callhook"></param>
+        /// <returns></returns>
         public bool TeleportTo(Fougerite.Player p, float distance = 1.5f, bool callhook = true)
         {
             if (this.IsOnline)
@@ -395,6 +544,9 @@ namespace Fougerite
             return false;
         }
 
+        /// <summary>
+        /// Teleports the player to a position. You may also disable the OnPlayerTeleport hook call.
+        /// </summary>
         public bool SafeTeleportTo(float x, float y, float z, bool callhook = true)
         {
             if (this.IsOnline)
@@ -405,6 +557,9 @@ namespace Fougerite
             return false;
         }
 
+        /// <summary>
+        /// Teleports the player to a position. You may also disable the OnPlayerTeleport hook call.
+        /// </summary>
         public bool SafeTeleportTo(float x, float z, bool callhook = true)
         {
             if (this.IsOnline)
@@ -415,6 +570,9 @@ namespace Fougerite
             return false;
         }
 
+        /// <summary>
+        /// Teleports the player to a position. You may also disable the OnPlayerTeleport hook call. You can also disable the safechecks made by Fougerite.
+        /// </summary>
         public bool SafeTeleportTo(Vector3 target, bool callhook = true, bool dosafechecks = true)
         {
             if (this.IsOnline)
@@ -513,6 +671,12 @@ namespace Fougerite
             return false;
         }
 
+        /// <summary>
+        /// Teleports the player to the closest rust spawnpoint that is the closest to the specified vector. You may also disable the OnPlayerTeleport hook call.
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="callhook"></param>
+        /// <returns></returns>
         public Vector3 TeleportToTheClosestSpawnpoint(Vector3 target, bool callhook = true)
         {
             Vector3 pos;
@@ -525,6 +689,9 @@ namespace Fougerite
             return pos;
         }
 
+        /// <summary>
+        /// Teleports the player to a position. You may also disable the OnPlayerTeleport hook call.
+        /// </summary>
         public bool TeleportTo(float x, float y, float z, bool callhook = true)
         {
             if (this.IsOnline)
@@ -534,6 +701,9 @@ namespace Fougerite
             return false;
         }
 
+        /// <summary>
+        /// Teleports the player to a position. You may also disable the OnPlayerTeleport hook call.
+        /// </summary>
         public bool TeleportTo(Vector3 target, bool callhook = true)
         {
             if (this.IsOnline)
@@ -548,10 +718,48 @@ namespace Fougerite
             return false;
         }
 
+        /// <summary>
+        /// Enables/Disables the player's admin rights.
+        /// </summary>
+        /// <param name="state"></param>
+        public void ForceAdminOff(bool state)
+        {
+            if (Fougerite.Server.Cache[UID] != null)
+            {
+                Fougerite.Server.Cache[UID]._adminoff = state;
+            }
+            if (state && this.ourPlayer.netUser.admin)
+            {
+                ourPlayer.netUser.SetAdmin(false);
+                ourPlayer.netUser.admin = false;
+            }
+            _adminoff = state;
+        }
+
+        /// <summary>
+        /// Enables/Disables the player's moderator rights.
+        /// </summary>
+        /// <param name="state"></param>
+        public void ForceModeratorOff(bool state)
+        {
+            if (Fougerite.Server.Cache[UID] != null)
+            {
+                Fougerite.Server.Cache[UID]._modoff = state;
+            }
+            _modoff = state;
+        }
+
+        /// <summary>
+        /// Gets if the player is an Admin on the Server.
+        /// </summary>
         public bool Admin
         {
             get
             {
+                if (_adminoff)
+                {
+                    return false;
+                }
                 if (this.IsOnline)
                 {
                     return this.ourPlayer.netUser.admin;
@@ -561,10 +769,17 @@ namespace Fougerite
 
         }
 
+        /// <summary>
+        /// Gets if the Player is in the "Moderators" DataStore table or has the Moderator Rust++ permission.
+        /// </summary>
         public bool Moderator
         {
             get
             {
+                if (_modoff)
+                {
+                    return false;
+                }
                if (Fougerite.Server.GetServer().HasRustPP)
                {
                     if (Fougerite.Server.GetServer().GetRustPPAPI().IsAdmin(this.UID))
@@ -576,6 +791,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Returns the SteamID of the player as ulong.
+        /// </summary>
         public ulong UID
         {
             get
@@ -584,6 +802,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Returns the SteamID of the player as string.
+        /// </summary>
         public string GameID
         {
             get
@@ -592,6 +813,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Returns the SteamID of the player as string.
+        /// </summary>
         public string SteamID
         {
             get
@@ -600,11 +824,19 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Returns the list of the restricted commands of the player.
+        /// </summary>
         public List<string> CommandCancelList
         {
             get { return this._CommandCancelList; }
         }
 
+        /// <summary>
+        /// Checks if the player has the specified blueprint.
+        /// </summary>
+        /// <param name="dataBlock"></param>
+        /// <returns></returns>
         public bool HasBlueprint(BlueprintDataBlock dataBlock)
         {
             if (this.IsOnline)
@@ -618,6 +850,11 @@ namespace Fougerite
             return false;
         }
 
+        /// <summary>
+        /// Checks if the player has the specified blueprint by blueprint name.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public bool HasBlueprint(string name)
         {
             if (this.IsOnline)
@@ -633,6 +870,10 @@ namespace Fougerite
             return false;
         }
 
+        /// <summary>
+        /// Gets all the blueprints of the player in a list.
+        /// </summary>
+        /// <returns></returns>
         public ICollection<BlueprintDataBlock> Blueprints()
         {
             if (!this.IsOnline)
@@ -648,6 +889,9 @@ namespace Fougerite
             return collection;
         }
 
+        /// <summary>
+        /// Gets / Sets the Player's current health.
+        /// </summary>
         public float Health
         {
             get
@@ -675,6 +919,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Returns the Player's inventory.
+        /// </summary>
         public PlayerInv Inventory
         {
             get
@@ -693,6 +940,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Returns the player's network IP address.
+        /// </summary>
         public string IP
         {
             get
@@ -701,6 +951,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets if the player is bleeding.
+        /// </summary>
         public bool IsBleeding
         {
             get
@@ -713,6 +966,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Returns the player's HumanBodyTakeDamage class if possible.
+        /// </summary>
         public HumanBodyTakeDamage HumanBodyTakeDmg
         {
             get
@@ -725,6 +981,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets if the player is cold.
+        /// </summary>
         public bool IsCold
         {
             get
@@ -737,6 +996,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets if the player is injured.
+        /// </summary>
         public bool IsInjured
         {
             get
@@ -749,6 +1011,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets if the player is radiation poisoned.
+        /// </summary>
         public bool IsRadPoisoned
         {
             get
@@ -761,6 +1026,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets if the player is warm.
+        /// </summary>
         public bool IsWarm
         {
             get
@@ -773,6 +1041,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets if the player is poisoned.
+        /// </summary>
         public bool IsPoisoned
         {
             get
@@ -785,6 +1056,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets if the player is starving.
+        /// </summary>
         public bool IsStarving
         {
             get
@@ -797,6 +1071,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets if the player is hungry.
+        /// </summary>
         public bool IsHungry
         {
             get
@@ -809,6 +1086,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets the player's bleeding level.
+        /// </summary>
         public float BleedingLevel
         {
             get
@@ -821,6 +1101,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets the player's calorie level.
+        /// </summary>
         public float CalorieLevel
         {
             get
@@ -834,6 +1117,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets the player's temperature.
+        /// </summary>
         public float CoreTemperature
         {
             get
@@ -856,6 +1142,10 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Increases or decreases the player's calorie level based on the negative or positive value.
+        /// </summary>
+        /// <param name="amount"></param>
         public void AdjustCalorieLevel(float amount)
         {
             if (!this.IsOnline && !this.IsAlive) {return;}
@@ -864,6 +1154,9 @@ namespace Fougerite
             else if (amount > 0) {this.PlayerClient.controllable.GetComponent<Metabolism>().AddCalories(amount);}
         }
 
+        /// <summary>
+        /// Gets or Sets the player's rad level
+        /// </summary>
         public float RadLevel
         {
             get
@@ -876,6 +1169,10 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Adds radiation to the player.
+        /// </summary>
+        /// <param name="amount"></param>
         public void AddRads(float amount)
         {
             if (this.IsOnline && this.IsAlive)
@@ -884,6 +1181,10 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Adds anti radiation to the player.
+        /// </summary>
+        /// <param name="amount"></param>
         public void AddAntiRad(float amount)
         {
             if (this.IsOnline && this.IsAlive)
@@ -892,6 +1193,10 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Adds water to the player.
+        /// </summary>
+        /// <param name="litres"></param>
         public void AddWater(float litres)
         {
             if (this.IsOnline && this.IsAlive)
@@ -900,6 +1205,10 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Increases or decreases the player's poison level based on the negative or positive value. 
+        /// </summary>
+        /// <param name="amount"></param>
         public void AdjustPoisonLevel(float amount)
         {
             if (this.IsOnline && this.IsAlive)
@@ -912,6 +1221,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets the player's disconnect location.
+        /// </summary>
         public Vector3 DisconnectLocation
         {
             get
@@ -924,6 +1236,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets / Sets the player's location.
+        /// </summary>
         public Vector3 Location
         {
             get
@@ -943,6 +1258,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets / Sets the player's name
+        /// </summary>
         public string Name
         {
             get
@@ -960,6 +1278,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Tries to find the player's sleeper if it exists and the player is offline.
+        /// </summary>
         public Sleeper Sleeper
         {
             get
@@ -978,6 +1299,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Checks if the player is inside a house.
+        /// </summary>
         public bool AtHome
         {
             get
@@ -994,6 +1318,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets the player's ping.
+        /// </summary>
         public int Ping
         {
             get
@@ -1006,6 +1333,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Returns the Rust PlayerClient class of this player.
+        /// </summary>
         public PlayerClient PlayerClient
         {
             get
@@ -1018,6 +1348,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Returns the falldamage class of this player.
+        /// </summary>
         public FallDamage FallDamage
         {
             get
@@ -1030,14 +1363,33 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Returns the online time of the player.
+        /// </summary>
         public long TimeOnline
         {
             get
             {
-                return ((DateTime.UtcNow.Ticks - this.connectedAt)/0x2710L);
+                if (IsOnline)
+                {
+                    return ((DateTime.UtcNow.Ticks - this.connectedAt) / 0x2710L);
+                }
+                return ((disconnecttime - this.connectedAt) / 0x2710L);
             }
         }
 
+        /// <summary>
+        /// Gets the player's disconnect time in DateTime.UtcNow.Ticks. Returns -1 if the player is online.
+        /// </summary>
+        public long DisconnectTime
+        {
+            get { return disconnecttime; }
+            internal set { disconnecttime = value; }
+        }
+
+        /// <summary>
+        /// Gets the X coordinate of the Player
+        /// </summary>
         public float X
         {
             get
@@ -1053,6 +1405,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets the Y coordinate of the Player
+        /// </summary>
         public float Y
         {
             get
@@ -1068,6 +1423,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets the Z coordinate of the Player
+        /// </summary>
         public float Z
         {
             get
@@ -1085,14 +1443,18 @@ namespace Fougerite
 
         private static Fougerite.Entity[] QueryToEntity<T>(IEnumerable<T> query)
         {
-            Fougerite.Entity[] these = new Fougerite.Entity[query.Count<T>()];
+            var enumerable = query.ToList();
+            Fougerite.Entity[] these = new Fougerite.Entity[enumerable.Count<T>()];
             for (int i = 0; i < these.Length; i++)
             {
-                these[i] = new Fougerite.Entity((query.ElementAtOrDefault<T>(i) as UnityEngine.Component).GetComponent<DeployableObject>());
+                these[i] = new Fougerite.Entity((enumerable.ElementAtOrDefault<T>(i) as UnityEngine.Component)?.GetComponent<DeployableObject>());
             }
             return these;
         }
 
+        /// <summary>
+        /// Gets all Entities (Buildings) that the player owns.
+        /// </summary>
         public Fougerite.Entity[] Structures
         {
             get
@@ -1100,15 +1462,19 @@ namespace Fougerite
                 var query = from s in StructureMaster.AllStructures
                             where this.UID == s.ownerID
                             select s;
-                Fougerite.Entity[] these = new Fougerite.Entity[query.Count()];
+                var structureMasters = query.ToList();
+                Fougerite.Entity[] these = new Fougerite.Entity[structureMasters.Count()];
                 for (int i = 0; i < these.Length; i++)
                 {
-                    these[i] = new Fougerite.Entity(query.ElementAtOrDefault(i));
+                    these[i] = new Fougerite.Entity(structureMasters.ElementAtOrDefault(i));
                 }
                 return these;
             }
         }
 
+        /// <summary>
+        /// Gets all Entities (Chests, Barricades, etc.) that the player owns.
+        /// </summary>
         public Fougerite.Entity[] Deployables
         {
             get
@@ -1120,6 +1486,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets all Entities (Shelters) that the player owns.
+        /// </summary>
         public Fougerite.Entity[] Shelters
         {
             get
@@ -1130,7 +1499,10 @@ namespace Fougerite
                 return QueryToEntity<DeployableObject>(query);
             }
         }
-
+        
+        /// <summary>
+        /// Gets all Entities (Chests, Stashes) that the player owns.
+        /// </summary>
         public Fougerite.Entity[] Storage
         {
             get
@@ -1141,7 +1513,10 @@ namespace Fougerite
                 return QueryToEntity<SaveableInventory>(query);
             }
         }
-
+        
+        /// <summary>
+        /// Gets all Entities (Camp Fires) that the player owns.
+        /// </summary>
         public Fougerite.Entity[] Fires
         {
             get
@@ -1153,6 +1528,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Checks if the player standing on something.
+        /// </summary>
         public bool IsOnGround
         {
             get
@@ -1180,6 +1558,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Checks if the player is near a building. (3.5m)
+        /// </summary>
         public bool IsNearStructure
         {
             get
@@ -1189,6 +1570,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Checks if the player is standing on a deployable object.
+        /// </summary>
         public bool IsOnDeployable
         {
             get
@@ -1221,6 +1605,9 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Checks if the player is inside a shelter.
+        /// </summary>
         public bool IsInShelter
         {
             get

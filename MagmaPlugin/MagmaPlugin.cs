@@ -159,6 +159,8 @@ namespace MagmaModule
                     case "On_PlayerBan": Hooks.OnPlayerBan += OnBanEvent; break;
                     case "On_RepairBench": Hooks.OnRepairBench += OnRepairBench; break;
                     case "On_ItemMove": Hooks.OnItemMove += OnItemMove; break;
+                    case "On_GenericSpawnLoad": Hooks.OnGenericSpawnerLoad += OnGenericSpawnLoad; break;
+                    case "On_ServerLoaded": Hooks.OnServerLoaded += OnServerLoaded; break;
                 }
             }
         }
@@ -221,6 +223,8 @@ namespace MagmaModule
                     case "On_PlayerBan": Hooks.OnPlayerBan -= OnBanEvent; break;
                     case "On_RepairBench": Hooks.OnRepairBench -= OnRepairBench; break;
                     case "On_ItemMove": Hooks.OnItemMove -= OnItemMove; break;
+                    case "On_GenericSpawnLoad": Hooks.OnGenericSpawnerLoad -= OnGenericSpawnLoad; break;
+                    case "On_ServerLoaded": Hooks.OnServerLoaded -= OnServerLoaded; break;
                 }
             }
         }
@@ -697,6 +701,16 @@ namespace MagmaModule
         public void OnBanEvent(BanEvent be)
         {
             Invoke("On_PlayerBan", be);
+        }
+        
+        public void OnGenericSpawnLoad(GenericSpawner gs)
+        {
+            Invoke("On_GenericSpawnLoad", gs);
+        }
+        
+        public void OnServerLoaded()
+        {
+            Invoke("On_ServerLoaded");
         }
 
         public void OnTimerCBArgs(string name, object[] args)

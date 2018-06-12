@@ -322,6 +322,16 @@ namespace MoonSharpModule
         {
             this.Invoke("On_ItemMove", new object[] { be });
         }
+        
+        public void OnGenericSpawnLoad(GenericSpawner gs)
+        {
+            this.Invoke("On_GenericSpawnLoad", new object[] { gs });
+        }
+        
+        public void OnServerLoaded()
+        {
+            this.Invoke("On_ServerLoaded");
+        }
 
         public void OnTimerCB(MoonSharpTE evt)
         {

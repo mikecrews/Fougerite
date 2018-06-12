@@ -10,11 +10,25 @@ namespace Fougerite
 {
     public class Loom : MonoBehaviour
     {
+        /// <summary>
+        /// Maximum amount of threads that can be queued at a time. Do not set this to a large number or rust will die.
+        /// </summary>
         public static int maxThreads = 30;
         private static Loom _current;
         internal static int numThreads;
         internal static bool initialized = false;
 
+        /// <summary>
+        /// Returns the current amount of queued threads.
+        /// </summary>
+        public int AmountOfThreads
+        {
+            get { return numThreads; }
+        }
+
+        /// <summary>
+        /// Returns the instance of the Loom Class.
+        /// </summary>
         public static Loom Current
         {
             get
@@ -60,11 +74,20 @@ namespace Fougerite
         private List<DelayedQueueItem> _delayed = new List<DelayedQueueItem>();
         List<DelayedQueueItem> _currentDelayed = new List<DelayedQueueItem>();
 
+        /// <summary>
+        /// Runs the code on the MAIN thread.
+        /// </summary>
+        /// <param name="action"></param>
         public static void QueueOnMainThread(Action action)
         {
             QueueOnMainThread(action, 0f);
         }
 
+        /// <summary>
+        /// Runs the code on the MAIN thread.
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="time"></param>
         public static void QueueOnMainThread(Action action, float time)
         {
             try
@@ -90,6 +113,10 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Runs the code in a larger thread.
+        /// </summary>
+        /// <param name="action"></param>
         public static void ExecuteInBiggerStackThread(Action action)
         {
             Thread bigStackThread = new Thread(() => action(), 1024 * 1024);

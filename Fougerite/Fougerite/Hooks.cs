@@ -2,13 +2,15 @@
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Timers;
 using Facepunch.Clocks.Counters;
 using Google.ProtocolBuffers.Serialization;
+using Rust;
 using RustProto;
 using RustProto.Helpers;
-using Shell32;
 
 namespace Fougerite
 {
@@ -25,61 +27,226 @@ namespace Fougerite
         public static System.Collections.Generic.List<object> decayList = new System.Collections.Generic.List<object>();
         public static Hashtable talkerTimers = new Hashtable();
 
+        /// <summary>
+        /// This delegate runs when a blueprint is being used.
+        /// </summary>
         public static event BlueprintUseHandlerDelegate OnBlueprintUse;
+        /// <summary>
+        /// This delegate runs when a chat message is received.
+        /// </summary>
         public static event ChatHandlerDelegate OnChat;
+        /// <summary>
+        /// This delegate runs when a chat message is received.
+        /// </summary>
         public static event ChatRawHandlerDelegate OnChatRaw;
+        /// <summary>
+        /// This delegate runs when a command is executed.
+        /// </summary>
         public static event CommandHandlerDelegate OnCommand;
+        /// <summary>
+        /// This delegate runs when a command is being executed
+        /// </summary>
         public static event CommandRawHandlerDelegate OnCommandRaw;
+        /// <summary>
+        /// This delegate runs when a console message is received.
+        /// </summary>
         public static event ConsoleHandlerDelegate OnConsoleReceived;
+        /// <summary>
+        /// This delegate runs when a door is opened/closed.
+        /// </summary>
         public static event DoorOpenHandlerDelegate OnDoorUse;
+        /// <summary>
+        /// This delegate runs when an entity is attacked by the default rust decay.
+        /// </summary>
         public static event EntityDecayDelegate OnEntityDecay;
         [System.Obsolete("Use OnEntityDeployedWithPlacer", false)]
         public static event EntityDeployedDelegate OnEntityDeployed;
+        /// <summary>
+        /// This delegate runs when an Entity is placed on the ground.
+        /// </summary>
         public static event EntityDeployedWithPlacerDelegate OnEntityDeployedWithPlacer;
+        /// <summary>
+        /// This delegate runs when an entity is damaged.
+        /// </summary>
         public static event EntityHurtDelegate OnEntityHurt;
+        /// <summary>
+        /// This delegate runs when an entity is destroyed.
+        /// </summary>
         public static event EntityDestroyedDelegate OnEntityDestroyed;
+        /// <summary>
+        /// This delegate runs when the item datablocks are loaded.
+        /// </summary>
         public static event ItemsDatablocksLoaded OnItemsLoaded;
+        /// <summary>
+        /// This delegate runs when an AI is hurt.
+        /// </summary>
         public static event HurtHandlerDelegate OnNPCHurt;
+        /// <summary>
+        /// This delegate runs when an AI is killed.
+        /// </summary>
         public static event KillHandlerDelegate OnNPCKilled;
+        /// <summary>
+        /// This delegate runs when a player is connecting to the server.
+        /// </summary>
         public static event ConnectionHandlerDelegate OnPlayerConnected;
+        /// <summary>
+        /// This delegate runs when a player disconnected from the server.
+        /// </summary>
         public static event DisconnectionHandlerDelegate OnPlayerDisconnected;
+        /// <summary>
+        /// This delegate runs when a player is gathering from an animal or from a resource.
+        /// </summary>
         public static event PlayerGatheringHandlerDelegate OnPlayerGathering;
+        /// <summary>
+        /// This delegate runs when a player is hurt.
+        /// </summary>
         public static event HurtHandlerDelegate OnPlayerHurt;
+        /// <summary>
+        /// This delegate runs when a player is killed
+        /// </summary>
         public static event KillHandlerDelegate OnPlayerKilled;
+        /// <summary>
+        /// This delegate runs when a player just spawned.
+        /// </summary>
         public static event PlayerSpawnHandlerDelegate OnPlayerSpawned;
+        /// <summary>
+        /// This delegate runs when a player is about to spawn.
+        /// </summary>
         public static event PlayerSpawnHandlerDelegate OnPlayerSpawning;
+        /// <summary>
+        /// This delegate runs when a plugin is loaded.
+        /// </summary>
         public static event PluginInitHandlerDelegate OnPluginInit;
+        /// <summary>
+        /// This delegate runs when a player is teleported using Fougerite API.
+        /// </summary>
         public static event TeleportDelegate OnPlayerTeleport;
+        /// <summary>
+        /// This delegate runs when the server started loading.
+        /// </summary>
         public static event ServerInitDelegate OnServerInit;
+        /// <summary>
+        /// This delegate runs when the server is stopping.
+        /// </summary>
         public static event ServerShutdownDelegate OnServerShutdown;
+        /// <summary>
+        /// This delegate runs when a player is talking through the microphone.
+        /// </summary>
         public static event ShowTalkerDelegate OnShowTalker;
+        /// <summary>
+        /// This delegate runs when the LootTables are loaded.
+        /// </summary>
         public static event LootTablesLoaded OnTablesLoaded;
+        /// <summary>
+        /// This delegate runs when all C# plugins loaded.
+        /// </summary>
         public static event ModulesLoadedDelegate OnModulesLoaded;
+        
+        [System.Obsolete("This method is no longer called since the rust api doesn't call It.", false)]
         public static event RecieveNetworkDelegate OnRecieveNetwork;
+        /// <summary>
+        /// This delegate runs when a player starts crafting.
+        /// </summary>
         public static event CraftingDelegate OnCrafting;
+        /// <summary>
+        /// This delegate runs when a resource object spawned.
+        /// </summary>
         public static event ResourceSpawnDelegate OnResourceSpawned;
+        /// <summary>
+        /// This delegate runs when an item is removed from a specific inventory.
+        /// </summary>
         public static event ItemRemovedDelegate OnItemRemoved;
+        /// <summary>
+        /// This delegate runs when an item is added to a specific inventory.
+        /// </summary>
         public static event ItemAddedDelegate OnItemAdded;
+        /// <summary>
+        /// This delegate runs when an airdrop is called.
+        /// </summary>
         public static event AirdropDelegate OnAirdropCalled;
         //public static event AirdropCrateDroppedDelegate OnAirdropCrateDropped;
+        /// <summary>
+        /// This delegate runs when a player is kicked by steam.
+        /// </summary>
         public static event SteamDenyDelegate OnSteamDeny;
+        /// <summary>
+        /// This delegate runs when a player is being approved.
+        /// </summary>
         public static event PlayerApprovalDelegate OnPlayerApproval;
+        /// <summary>
+        /// This delegate runs when a player is moving. (Even if standing at one place)
+        /// </summary>
         public static event PlayerMoveDelegate OnPlayerMove;
+        /// <summary>
+        /// This delegate runs when a player researched an item.
+        /// </summary>
         public static event ResearchDelegate OnResearch;
+        /// <summary>
+        /// This delegate runs when the server is being saved.
+        /// </summary>
         public static event ServerSavedDelegate OnServerSaved;
+        /// <summary>
+        /// This delegate runs when an item is picked up by a player.
+        /// </summary>
         public static event ItemPickupDelegate OnItemPickup;
+        /// <summary>
+        /// This delegate runs when a player received fall damage.
+        /// </summary>
         public static event FallDamageDelegate OnFallDamage;
+        /// <summary>
+        /// This delegate runs when a player is looting something.
+        /// </summary>
         public static event LootEnterDelegate OnLootUse;
+        /// <summary>
+        /// This delegate runs when a player is shooting a weapon.
+        /// </summary>
         public static event ShootEventDelegate OnShoot;
+        /// <summary>
+        /// This delegate runs when a player is shooting a shotgun.
+        /// </summary>
         public static event ShotgunShootEventDelegate OnShotgunShoot;
+        /// <summary>
+        /// This delegate runs when a player is shooting a bow.
+        /// </summary>
         public static event BowShootEventDelegate OnBowShoot;
+        /// <summary>
+        /// This delegate runs when a player throws a grenade.
+        /// </summary>
         public static event GrenadeThrowEventDelegate OnGrenadeThrow;
+        /// <summary>
+        /// This delegate runs when a player got banned.
+        /// </summary>
         public static event BanEventDelegate OnPlayerBan;
+        /// <summary>
+        /// This delegate runs when a player is using the repair bench.
+        /// </summary>
         public static event RepairBenchEventDelegate OnRepairBench;
+        /// <summary>
+        /// This delegate runs when an item is being moved in an inventory to a different slot / inventory.
+        /// </summary>
         public static event ItemMoveEventDelegate OnItemMove;
-        public static bool IsShuttingDown = false;
+        /// <summary>
+        /// This delegate runs when the ResourceSpawner loaded.
+        /// </summary>
+        public static event GenericSpawnerLoadDelegate OnGenericSpawnerLoad;
+        /// <summary>
+        /// This delegate runs when the server finished loading.
+        /// </summary>
+        public static event ServerLoadedDelegate OnServerLoaded;
+
+        /// <summary>
+        /// This value returns if the server is shutting down.
+        /// </summary>
+        public static bool IsShuttingDown
+        {
+            get;
+            internal set;
+        }
 
         public static readonly List<ulong> uLinkDCCache = new List<ulong>(); 
+        
+        internal static Dictionary<string, Flood> FloodChecks = new Dictionary<string, Flood>();
+        internal static Dictionary<string, DateTime> FloodCooldown = new Dictionary<string, DateTime>();
 
         public static void BlueprintUse(IBlueprintItem item, BlueprintDataBlock bdb)
         {
@@ -215,7 +382,7 @@ namespace Fougerite
                 string s = Regex.Replace(newchat, @"\[/?color\b.*?\]", string.Empty);
                 if (s.Length <= 100)
                 {
-                    Fougerite.Data.GetData().chat_history.Add(newchat);
+                    Fougerite.Data.GetData().chat_history.Add(chatstr);
                     Fougerite.Data.GetData().chat_history_username.Add(quotedName);
                     ConsoleNetworker.Broadcast("chat.add " + quotedName + " " + newchat);
                     return;
@@ -812,7 +979,7 @@ namespace Fougerite
             return blocks.ToArray();
         }
 
-        public static void ItemPickup(Controllable controllable, IInventoryItem item, Inventory local, Inventory.AddExistingItemResult result)
+        public static bool ItemPickup(ItemPickup pickup, Controllable controllable)
         {
             Stopwatch sw = null;
             if (Logger.showSpeed)
@@ -820,7 +987,29 @@ namespace Fougerite
                 sw = new Stopwatch();
                 sw.Start();
             }
-            ItemPickupEvent ipe = new ItemPickupEvent(controllable, item, local, result);
+
+            IInventoryItem item;
+            Inventory local = controllable.GetLocal<Inventory>();
+            if (local == null)
+            {
+                return false;
+            }
+
+            Inventory inventory2 = pickup.GetLocal<Inventory>();
+            if ((inventory2 == null) || object.ReferenceEquals(item = inventory2.firstItem, null))
+            {
+                pickup.RemoveThis();
+                return false;
+            }
+            
+            if (sw != null)
+            {
+                sw.Stop();
+                if (sw.Elapsed.TotalSeconds > 0)
+                    Logger.LogSpeed("ItemPickupEvent Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
+            }
+            
+            ItemPickupEvent ipe = new ItemPickupEvent(controllable, item, local);
             try
             {
                 if (OnItemPickup != null)
@@ -832,9 +1021,39 @@ namespace Fougerite
             {
                 Logger.LogError("ItemPickupEvent Error: " + ex);
             }
-            if (sw == null) return;
-            sw.Stop();
-            if (sw.Elapsed.TotalSeconds > 0) Logger.LogSpeed("ItemPickupEvent Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
+
+            if (ipe.Cancelled)
+            {
+                return false;
+            }
+
+            Inventory.AddExistingItemResult result = local.AddExistingItem(item, false);
+            switch (result)
+            {
+                case Inventory.AddExistingItemResult.CompletlyStacked:
+                    inventory2.RemoveItem(item);
+                    break;
+
+                case Inventory.AddExistingItemResult.Moved:
+                    break;
+
+                case Inventory.AddExistingItemResult.PartiallyStacked:
+                    pickup.UpdateItemInfo(item);
+                    return true;
+
+                case Inventory.AddExistingItemResult.Failed:
+                    return false;
+
+                case Inventory.AddExistingItemResult.BadItemArgument:
+                    pickup.RemoveThis();
+                    return false;
+
+                default:
+                    throw new NotImplementedException();
+            }
+
+            pickup.RemoveThis();
+            return true;
         }
 
         public static void FallDamage(FallDamage fd, float speed, float num, bool flag, bool flag2)
@@ -994,6 +1213,32 @@ namespace Fougerite
                 player.Message(string.Format("This server is powered by Fougerite v.{0}!", Bootstrap.Version));
             }
             Logger.LogDebug("User Connected: " + player.Name + " (" + player.SteamID + ")" + " (" + player.IP + ")");
+
+            if (!FloodChecks.ContainsKey(player.IP))
+            {
+                // Create the flood class.
+                Flood f = new Flood(player.IP);
+                FloodChecks[player.IP] = f;
+            }
+            else
+            {
+                var data = FloodChecks[player.IP];
+                if (data.Amount < Bootstrap.FloodConnections) // Allow n connections from the same IP / 3 secs.
+                {
+                    data.Increase();
+                    data.Reset();
+                }
+                else
+                {
+                    data.Stop();
+                    if (FloodChecks.ContainsKey(player.IP))
+                    {
+                        FloodChecks.Remove(player.IP);
+                    }
+                    FloodCooldown[player.IP] = DateTime.Now;
+                }
+            }
+
             if (sw == null) return connected;
             sw.Stop();
             if (sw.Elapsed.TotalSeconds > 0) Logger.LogSpeed("PlayerConnectedEvent Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
@@ -1025,6 +1270,8 @@ namespace Fougerite
                 Logger.LogWarning("[WeirdDisconnect] Player was null at the disconnection. Something might be wrong? OPT: " + Fougerite.Bootstrap.CR);
                 return;
             }
+
+            player.DisconnectTime = DateTime.UtcNow.Ticks;
             player.IsDisconnecting = true;
             Fougerite.Server.GetServer().RemovePlayer(uid);
             //if (Fougerite.Server.GetServer().Players.Contains(player)) { Fougerite.Server.GetServer().Players.Remove(player); }
@@ -1277,55 +1524,58 @@ namespace Fougerite
             if (sw.Elapsed.TotalSeconds > 0) Logger.LogSpeed("TeleportEvent Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
         }
 
+        internal static DateTime LasTime = DateTime.Now;
         public static void RecieveNetwork(Metabolism m, float cal, float water, float rad, float anti, float temp, float poison)
         {
-            bool h = false;
+            DateTime now = DateTime.Now;
+            DateTime then = LasTime;
+            double diff = (now - then).TotalMinutes;
+            if (diff > 5)
+            {
+                LasTime = DateTime.Now;
+                Logger.LogWarning("[RecieveNetwork] A metabolism hack was prevented.");
+            }
+            /*bool h = false;
             Fougerite.Player p = null;
             if (m.playerClient != null)
             {
                 p = Fougerite.Server.Cache[m.playerClient.userID];
             }
-            if (float.IsNaN(cal) || cal > 3000)
+            if (float.IsNaN(cal) || cal > 3000 || float.IsInfinity(cal) || cal < 0)
             {
                 m.caloricLevel = 600;
+                h = true;
                 if (p != null)
                 {
-                    Logger.LogWarning("[CalorieHack] " + p.Name + " | " + p.SteamID + " is using calorie hacks! =)");
-                    Fougerite.Server.GetServer().Broadcast("CalorieHack Detected: " + p.Name);
-                    Fougerite.Server.GetServer().BanPlayer(p, "Console", "CalorieHack");
-                    h = true;
+                    Logger.LogWarning("[CalorieHack] Bypassed. Target was: " + p.Name + " " + cal);
+                    //Logger.LogWarning("[CalorieHack] " + p.Name + " | " + p.SteamID + " is using calorie hacks! =)");
+                    //Fougerite.Server.GetServer().Broadcast("CalorieHack Detected: " + p.Name);
+                    //Fougerite.Server.GetServer().BanPlayer(p, "Console", "CalorieHack");
                 }
             }
             else
             {
                 m.caloricLevel = cal;
             }
-            if (rad > 3000)
+            if (float.IsNaN(rad) || rad > 3000 || float.IsInfinity(rad) || rad < 0)
             {
                 m.radiationLevel = 0;
                 h = true;
                 if (p != null)
                 {
-                    Logger.LogDebug("[RadiationHack] Someone tried to kill " + p.Name + " with radiation hacks.");
-                }
-            }
-            else if (float.IsNaN(rad))
-            {
-                m.radiationLevel = 0;
-                h = true;
-                if (p != null)
-                {
-                    Logger.LogWarning("[RadiationHack] " + p.Name + " using radiation hacks.");
-                    Fougerite.Server.GetServer().Broadcast("RadiationHack Detected: " + p.Name);
-                    Fougerite.Server.GetServer().BanPlayer(p, "Console", "RadiationHack");
+                    Logger.LogDebug("[RadiationHack] Bypassed. Target was: " + p.Name + " " + rad);
                 }
             }
             else
             {
                 m.radiationLevel = rad;
             }
-            if (float.IsNaN(poison) || poison > 5000)
+            if (float.IsNaN(poison) || poison > 5000 || float.IsInfinity(poison) || poison < 0)
             {
+                if (p != null)
+                {
+                    Logger.LogDebug("[PoisonChange] Bypassed. Target was: " + p.Name + " " + poison);
+                }
                 m.poisonLevel = 0;
                 h = true;
             }
@@ -1333,8 +1583,12 @@ namespace Fougerite
             {
                 m.poisonLevel = poison;
             }
-            if (float.IsNaN(water) || water > 5000)
+            if (float.IsNaN(water) || water > 5000 || float.IsInfinity(water) || water < 0)
             {
+                if (p != null)
+                {
+                    Logger.LogDebug("[WaterChange] Bypassed. Target was: " + p.Name + " " + water);
+                }
                 m.waterLevelLitre = 0;
                 h = true;
             }
@@ -1342,8 +1596,12 @@ namespace Fougerite
             {
                 m.waterLevelLitre = water;
             }
-            if (float.IsNaN(anti) || anti > 3000)
+            if (float.IsNaN(anti) || anti > 3000 || float.IsInfinity(anti) || anti < 0)
             {
+                if (p != null)
+                {
+                    Logger.LogDebug("[AntiRadChange] Bypassed. Target was: " + p.Name + " " + anti);
+                }
                 m.antiRads = 0;
                 h = true;
             }
@@ -1351,8 +1609,12 @@ namespace Fougerite
             {
                 m.antiRads = anti;
             }
-            if (float.IsNaN(temp) || temp > 5000)
+            if (float.IsNaN(temp) || temp > 5000 || float.IsInfinity(temp) || temp < 0)
             {
+                if (p != null)
+                {
+                    Logger.LogDebug("[TemperatureChange] Bypassed. Target was: " + p.Name + " " + temp);
+                }
                 m.coreTemperature = 0;
                 h = true;
             }
@@ -1374,7 +1636,10 @@ namespace Fougerite
             {
                 Logger.LogError("RecieveNetworkEvent Error: " + ex.ToString());
             }
-            if (!h) { RPOS.MetabolismUpdate(); }
+            if (!h)
+            {
+                RPOS.MetabolismUpdate();
+            }*/
         }
 
         public static void CraftingEvent(CraftingInventory inv, BlueprintDataBlock blueprint, int amount, ulong startTime)
@@ -1583,45 +1848,48 @@ namespace Fougerite
             if (sw.Elapsed.TotalSeconds > 0) Logger.LogSpeed("GrenadeEvent Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
         }
 
-        public static bool ServerSaved()
+        public static void OnServerSaveEvent()
         {
-            if (ServerSaveManager._loading)
-            {
-                return false;
-            }
-            DataStore.GetInstance().Save();
-            string path = ServerSaveManager.autoSavePath;
             try
             {
-                if (OnServerSaved != null)
+                if (Hooks.OnServerSaved != null)
                 {
-                    OnServerSaved();
+                    Hooks.OnServerSaved();
                 }
             }
             catch (Exception ex)
             {
                 Logger.LogError("ServerSavedEvent Error: " + ex);
             }
-            if (IsShuttingDown)
+        }
+        
+        public static bool ServerSaved()
+        {
+            if (!IsShuttingDown)
             {
-                SaveAll(path);
-                return true;
+                Logger.LogWarning("[Fougerite WorldSaver] Default Rust Save activated the saving method. Please set the time to maximum to avoid this.");
             }
-            if (Bootstrap.TS)
+
+            if (ServerSaveManager._loading)
             {
-                Loom.ExecuteInBiggerStackThread(() => {
-                    SaveAll(path);
-                });
+                return false;
             }
-            else
-            {
-                SaveAll(path);
-            }
+            string path = ServerSaveManager.autoSavePath;
+            SaveAll(path);
+            
+            OnServerSaveEvent();
             return true;
         }
 
         internal static void SaveAll(string path)
         {
+            if (ServerSaveHandler.ServerIsSaving)
+            {
+                Logger.LogDebug("[Fougerite WorldSave] Server's thread is still saving. We are ignoring the save request.");
+                return;
+            }
+            ServerSaveHandler.ServerIsSaving = true;
+            DataStore.GetInstance().Save();
             SystemTimestamp restart = SystemTimestamp.Restart;
             if (path == string.Empty)
             {
@@ -1653,67 +1921,88 @@ namespace Fougerite
                     }
                     ServerSaveManager._loadedOnce = true;
                 }
-                using (Recycler<WorldSave, WorldSave.Builder> recycler = WorldSave.Recycler())
-                {
-                    WorldSave.Builder builder = recycler.OpenBuilder();
-                    timestamp2 = SystemTimestamp.Restart;
-                    ServerSaveManager.Get(false).DoSave(ref builder);
+                    ServerSaveManager s;
+                    WorldSave.Builder builder;
+                    using (Recycler<WorldSave, WorldSave.Builder> recycler = WorldSave.Recycler())
+                    {
+                        builder = recycler.OpenBuilder();
+                        timestamp2 = SystemTimestamp.Restart;
+                        s = ServerSaveManager.Get(false);
+                    }
+                    s.DoSave(ref builder);
                     timestamp2.Stop();
                     timestamp3 = SystemTimestamp.Restart;
                     fsave = builder.Build();
                     timestamp3.Stop();
-                }
-                int num = fsave.SceneObjectCount + fsave.InstanceObjectCount;
-                if (save.friendly)
-                {
-                    using (FileStream stream = File.Open(path + ".json", FileMode.Create, FileAccess.Write))
+                    int num = fsave.SceneObjectCount + fsave.InstanceObjectCount;
+                    if (save.friendly)
                     {
-                        JsonFormatWriter writer = JsonFormatWriter.CreateInstance(stream);
-                        writer.Formatted();
-                        writer.WriteMessage(fsave);
+                        using (FileStream stream = File.Open(path + ".json", FileMode.Create, FileAccess.Write))
+                        {
+                            JsonFormatWriter writer = JsonFormatWriter.CreateInstance(stream);
+                            writer.Formatted();
+                            writer.WriteMessage(fsave);
+                        }
                     }
-                }
-                SystemTimestamp timestamp5 = timestamp4 = SystemTimestamp.Restart;
-                using (FileStream stream2 = File.Open(path + ".new", FileMode.Create, FileAccess.Write))
-                {
-                    fsave.WriteTo(stream2);
-                    stream2.Flush();
-                }
-                timestamp4.Stop();
-                if (File.Exists(path + ".old.5"))
-                {
-                    File.Delete(path + ".old.5");
-                }
-                for (int i = 4; i >= 0; i--)
-                {
-                    if (File.Exists(path + ".old." + i))
+
+                    SystemTimestamp timestamp5 = timestamp4 = SystemTimestamp.Restart;
+                    using (FileStream stream2 = File.Open(path + ".new", FileMode.Create, FileAccess.Write))
                     {
-                        File.Move(path + ".old." + i, path + ".old." + (i + 1));
+                        fsave.WriteTo(stream2);
+                        stream2.Flush();
                     }
+
+                    timestamp4.Stop();
+                    if (File.Exists(path + ".old.5"))
+                    {
+                        File.Delete(path + ".old.5");
+                    }
+
+                    for (int i = 4; i >= 0; i--)
+                    {
+                        if (File.Exists(path + ".old." + i))
+                        {
+                            File.Move(path + ".old." + i, path + ".old." + (i + 1));
+                        }
+                    }
+
+                    if (File.Exists(path))
+                    {
+                        File.Move(path, path + ".old.0");
+                    }
+
+                    if (File.Exists(path + ".new"))
+                    {
+                        File.Move(path + ".new", path);
+                    }
+
+                    timestamp5.Stop();
+                    restart.Stop();
+                    if (save.profile)
+                    {
+                        object[] args = new object[]
+                        {
+                            num, timestamp2.ElapsedSeconds,
+                            timestamp2.ElapsedSeconds / restart.ElapsedSeconds, timestamp3.ElapsedSeconds,
+                            timestamp3.ElapsedSeconds / restart.ElapsedSeconds, timestamp4.ElapsedSeconds,
+                            timestamp4.ElapsedSeconds / restart.ElapsedSeconds, timestamp5.ElapsedSeconds,
+                            timestamp5.ElapsedSeconds / restart.ElapsedSeconds, restart.ElapsedSeconds,
+                            restart.ElapsedSeconds / restart.ElapsedSeconds
+                        };
+                        Logger.Log(string.Format(
+                            " Saved {0} Object(s) [times below are in elapsed seconds]\r\n  Logic:\t{1,-16:0.000000}\t{2,7:0.00%}\r\n  Build:\t{3,-16:0.000000}\t{4,7:0.00%}\r\n  Stream:\t{5,-16:0.000000}\t{6,7:0.00%}\r\n  All IO:\t{7,-16:0.000000}\t{8,7:0.00%}\r\n  Total:\t{9,-16:0.000000}\t{10,7:0.00%}",
+                            args));
+                    }
+                    else
+                    {
+                        Logger.Log(string.Concat(new object[]
+                            {" Saved ", num, " Object(s). Took ", restart.ElapsedSeconds, " seconds."}));
+                    }
+                    ServerSaveHandler.ServerIsSaving = false;
                 }
-                if (File.Exists(path))
-                {
-                    File.Move(path, path + ".old.0");
-                }
-                if (File.Exists(path + ".new"))
-                {
-                    File.Move(path + ".new", path);
-                }
-                timestamp5.Stop();
-                restart.Stop();
-                if (save.profile)
-                {
-                    object[] args = new object[] { num, timestamp2.ElapsedSeconds, timestamp2.ElapsedSeconds / restart.ElapsedSeconds, timestamp3.ElapsedSeconds, timestamp3.ElapsedSeconds / restart.ElapsedSeconds, timestamp4.ElapsedSeconds, timestamp4.ElapsedSeconds / restart.ElapsedSeconds, timestamp5.ElapsedSeconds, timestamp5.ElapsedSeconds / restart.ElapsedSeconds, restart.ElapsedSeconds, restart.ElapsedSeconds / restart.ElapsedSeconds };
-                    Logger.Log(string.Format(" Saved {0} Object(s) [times below are in elapsed seconds]\r\n  Logic:\t{1,-16:0.000000}\t{2,7:0.00%}\r\n  Build:\t{3,-16:0.000000}\t{4,7:0.00%}\r\n  Stream:\t{5,-16:0.000000}\t{6,7:0.00%}\r\n  All IO:\t{7,-16:0.000000}\t{8,7:0.00%}\r\n  Total:\t{9,-16:0.000000}\t{10,7:0.00%}", args));
-                }
-                else
-                {
-                    Logger.Log(string.Concat(new object[] { " Saved ", num, " Object(s). Took ", restart.ElapsedSeconds, " seconds." }));
-                }
-            }
         }
 
-        public static void ItemRemoved(Inventory inventory, int slot, IInventoryItem item)
+        public static bool ItemRemoved(Inventory inv, int slot, InventoryItem match, bool mustMatch)
         {
             Stopwatch sw = null;
             if (Logger.showSpeed)
@@ -1721,42 +2010,107 @@ namespace Fougerite
                 sw = new Stopwatch();
                 sw.Start();
             }
+            Collection<InventoryItem> collection = inv.collection;
+            InventoryItem inventoryItem;
+            if (mustMatch && (!collection.Get(slot, out inventoryItem) || !object.ReferenceEquals((object) inventoryItem, (object) match)) || !collection.Evict(slot, out inventoryItem))
+            {
+                return false;
+            }
+
+            Fougerite.Events.InventoryModEvent e = null;
             try
             {
-                foreach (var x in RPOS.AllWindows)
-                {
-                    Server.GetServer().Broadcast(x.name);
-                }
-                //RPOS.Get().
+                e = new Fougerite.Events.InventoryModEvent(inv, slot, inventoryItem.iface, "Remove");
                 if (OnItemRemoved != null)
                 {
-                    Fougerite.Events.InventoryModEvent e = new Fougerite.Events.InventoryModEvent(inventory, slot, item, "Remove");
                     OnItemRemoved(e);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                //Logger.LogError("InventoryRemoveEvent error: " + ex);
+                Logger.LogError("InventoryRemoveEvent Error: " + ex);
             }
-            if (sw == null) return;
-            sw.Stop();
-            if (sw.Elapsed.TotalSeconds > 0) Logger.LogSpeed("ItemRemoved Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
+
+            if (e != null && e.Cancelled)
+            {
+                if (sw != null)
+                {
+                    sw.Stop();
+                    if (sw.Elapsed.TotalSeconds > 0)
+                        Logger.LogSpeed("ItemRemoved Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
+                }
+                return false;
+            }
+
+            if (inventoryItem == inv._activeItem)
+            {
+                inv.DeactivateItem();
+            }
+
+            inv.ItemRemoved(slot, inventoryItem.iface);
+            inv.MarkSlotDirty(slot);
+            if (sw != null)
+            {
+                sw.Stop();
+                if (sw.Elapsed.TotalSeconds > 0)
+                    Logger.LogSpeed("ItemRemoved Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
+            }
+            return true;
         }
 
-        public static void ItemAdded(Inventory inventory, int slot, IInventoryItem item)
+        public static bool ItemAdded(ref Inventory.Payload.Assignment args)
         {
+            Stopwatch sw = null;
+            if (Logger.showSpeed)
+            {
+                sw = new Stopwatch();
+                sw.Start();
+            }
+
+            Fougerite.Events.InventoryModEvent e = null;
             try
             {
+                e = new Fougerite.Events.InventoryModEvent(args.inventory, args.slot, args.item.iface, "Add");
                 if (OnItemAdded != null)
                 {
-                    Fougerite.Events.InventoryModEvent e = new Fougerite.Events.InventoryModEvent(inventory, slot, item, "Add");
                     OnItemAdded(e);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                //Logger.LogError("InventoryAddEvent error: " + ex);
+                Logger.LogError("InventoryAddEvent Error: " + ex);
             }
+
+            if (e == null || (e != null && !e.Cancelled))
+            {
+                if (args.inventory.CheckSlotFlagsAgainstSlot(args.datablock._itemFlags, args.slot) &&
+                    args.item.CanMoveToSlot(args.inventory, args.slot))
+                {
+                    ++args.attemptsMade;
+                    if (args.collection.Occupy(args.slot, args.item))
+                    {
+                        if (!args.fresh && (bool) ((UnityEngine.Object) args.item.inventory))
+                            args.item.inventory.RemoveItem(args.item.slot);
+                        args.item.SetUses(args.uses);
+                        args.item.OnAddedTo(args.inventory, args.slot);
+                        args.inventory.ItemAdded(args.slot, args.item.iface);
+                        if (sw != null)
+                        {
+                            sw.Stop();
+                            if (sw.Elapsed.TotalSeconds > 0)
+                                Logger.LogSpeed("ItemAdded Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
+                        }
+                        return true;
+                    }
+                }
+            }
+            if (sw != null)
+            {
+                sw.Stop();
+                if (sw.Elapsed.TotalSeconds > 0)
+                    Logger.LogSpeed("ItemAdded Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
+            }
+            return false;
         }
 
         public static void Airdrop(Vector3 v)
@@ -1923,12 +2277,8 @@ namespace Fougerite
                         }
                     }
                 }
-                //new Thread(() =>
-                //{
-                //Thread.CurrentThread.IsBackground = true;
                 foreach (GameObject obj2 in objArray)
                 {
-                    //Logger.LogWarning(obj2.name);
                     try
                     {
                         if (obj2 != null)
@@ -1941,11 +2291,10 @@ namespace Fougerite
                         Logger.LogError("[uLink Error] Disconnect failure, report to DreTaX: " + ex);
                     }
                 }
-                //}).Start();
             }
-            catch //(Exception ex)
+            catch (Exception ex)
             {
-                //Logger.LogError("[uLink Error] Full Exception: " + ex);
+                Logger.LogDebug("[uLink Error] Full Exception: " + ex);
             }
             if (sw == null) return;
             sw.Stop();
@@ -1976,6 +2325,19 @@ namespace Fougerite
                 ulong uid = clientConnection.UserID;
                 string ip = approval.ipAddress;
                 string name = clientConnection.UserName;
+
+                if (FloodCooldown.ContainsKey(ip))
+                {
+                    DateTime now = DateTime.Now;
+                    DateTime then = FloodCooldown[ip];
+                    double diff = (now - then).TotalMinutes;
+                    if (diff >= 15)
+                    {
+                        Logger.LogWarning("[Flood Protection] " + ip + " was removed from the cooldown.");
+                        FloodCooldown.Remove(ip);
+                    }
+                }
+
                 if (clientConnection.Protocol != 1069)
                 {
                     Debug.Log((object)("Denying entry to client with invalid protocol version (" + ip + ")"));
@@ -2044,6 +2406,10 @@ namespace Fougerite
                     Debug.Log((object)("Denying entry to " + uid.ToString() + " because they're already connected"));
                     approval.Deny(uLink.NetworkConnectionError.AlreadyConnectedToAnotherServer);
                 }
+                else if (FloodCooldown.ContainsKey(ip))
+                {
+                    approval.Deny(uLink.NetworkConnectionError.CreateSocketOrThreadFailure);
+                }
                 else
                 {
                     PlayerApprovalEvent ape = new PlayerApprovalEvent(ca, approval, clientConnection, false);
@@ -2110,7 +2476,8 @@ namespace Fougerite
             }
         }
 
-        public static void ResearchItem(IInventoryItem otherItem)
+        public static InventoryItem.MergeResult ResearchItem(ResearchToolItem<ToolDataBlock> rti,
+            IInventoryItem otherItem)
         {
             Stopwatch sw = null;
             if (Logger.showSpeed)
@@ -2118,11 +2485,40 @@ namespace Fougerite
                 sw = new Stopwatch();
                 sw.Start();
             }
+
+            BlueprintDataBlock block2;
+            PlayerInventory inventory = rti.inventory as PlayerInventory;
+            if ((inventory == null) || (otherItem.inventory != inventory))
+            {
+                return InventoryItem.MergeResult.Failed;
+            }
+
+            ItemDataBlock datablock = otherItem.datablock;
+            if ((datablock == null) || !datablock.isResearchable)
+            {
+                return InventoryItem.MergeResult.Failed;
+            }
+
+            if (!inventory.AtWorkBench())
+            {
+                return InventoryItem.MergeResult.Failed;
+            }
+
+            if (!BlueprintDataBlock.FindBlueprintForItem<BlueprintDataBlock>(otherItem.datablock, out block2))
+            {
+                return InventoryItem.MergeResult.Failed;
+            }
+
+            if (inventory.KnowsBP(block2))
+            {
+                return InventoryItem.MergeResult.Failed;
+            }
+
+            ResearchEvent researchEvent = new ResearchEvent(otherItem);;
             try
             {
                 if (OnResearch != null)
                 {
-                    ResearchEvent researchEvent = new ResearchEvent(otherItem);
                     OnResearch(researchEvent);
                 }
             }
@@ -2130,9 +2526,27 @@ namespace Fougerite
             {
                 Logger.LogError("ResearchItem Error: " + ex.ToString());
             }
-            if (sw == null) return;
-            sw.Stop();
-            if (sw.Elapsed.TotalSeconds > 0) Logger.LogSpeed("ResearchItem Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
+
+            if (!researchEvent.Cancelled)
+            {
+                inventory.BindBlueprint(block2);
+                Notice.Popup(inventory.networkView.owner, "?", "You can now craft " + otherItem.datablock.name, 4f);
+                int numWant = 1;
+                if (rti.Consume(ref numWant))
+                {
+                    rti.inventory.RemoveItem(rti.slot);
+                }
+
+            }
+
+            if (sw != null)
+            {
+                sw.Stop();
+                if (sw.Elapsed.TotalSeconds > 0)
+                    Logger.LogSpeed("ResearchItem Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
+            }
+
+            return !researchEvent.Cancelled ? InventoryItem.MergeResult.Combined : InventoryItem.MergeResult.Failed;
         }
 
         public static void SetLooter(LootableObject lo, uLink.NetworkPlayer ply)
@@ -2162,7 +2576,7 @@ namespace Fougerite
                         }
                         catch (Exception exception)
                         {
-                            Debug.LogError(exception, lo);
+                            Logger.LogError("[SetLooter] Error: " + exception);
                             NetCull.RPC((UnityEngine.MonoBehaviour)lo, "StopLooting", uLink.RPCMode.Server);
                             lo.thisClientIsInWindow = false;
                             ply = uLink.NetworkPlayer.unassigned;
@@ -2196,12 +2610,13 @@ namespace Fougerite
             lo.SendCurrentLooter();
             lo.CancelInvokes();
             lo.InvokeRepeating("RadialCheck", 0f, 10f);
+            LootStartEvent lt = null;
             if (user != null)
             {
                 if (Fougerite.Server.Cache.ContainsKey(user.userID))
                 {
                     Fougerite.Player pl = Fougerite.Server.Cache[user.userID];
-                    LootStartEvent lt = new LootStartEvent(lo, pl, use, ulinkuser);
+                    lt = new LootStartEvent(lo, pl, use, ulinkuser);
                     try
                     {
                         if (OnLootUse != null)
@@ -2213,17 +2628,176 @@ namespace Fougerite
                     {
                         Logger.LogError("LootStartEvent Error: " + ex);
                     }
-
-                    /*if (lt.IsCancelled)
-                    {
-                        return;
-                    }*/
                 }
             }
-            if (sw == null) return;
-            sw.Stop();
-            if (sw.Elapsed.TotalSeconds > 0) Logger.LogSpeed("ChestEnterEvent Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
+
+            if (sw != null)
+            {
+                sw.Stop();
+                if (sw.Elapsed.TotalSeconds > 0)
+                    Logger.LogSpeed("ChestEnterEvent Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
+            }
+
+            //return lt;
         }
+
+        /*public static UseResponse EnterHandler(Useable use, Character attempt, UseEnterRequest request)
+        {
+            LootableObject lootableObject = use.GetComponent<LootableObject>();
+            Logger.Log("null: " + lootableObject);
+
+            if (!use.canUse)
+            {
+                return UseResponse.Fail_NotIUseable;
+            }
+
+            Useable.EnsureServer();
+            if (((int) use.callState) != 0)
+            {
+                Logger.LogWarning(
+                    "Some how Enter got called from a call stack originating with " + use.callState +
+                    " fix your script to not do this.", use);
+                return UseResponse.Fail_InvalidOperation;
+            }
+
+            if (Useable.hasException)
+            {
+                Useable.ClearException(false);
+            }
+
+            if (attempt == null)
+            {
+                return UseResponse.Fail_NullOrMissingUser;
+            }
+
+            if (attempt.signaledDeath)
+            {
+                return UseResponse.Fail_UserDead;
+            }
+
+            if (use._user == null)
+            {
+                if (use.implementation != null)
+                {
+                    try
+                    {
+                        UseResponse response;
+                        use.callState = FunctionCallState.Enter;
+                        if (use.canCheck)
+                        {
+                            try
+                            {
+                                response = (UseResponse) use.useCheck.CanUse(attempt, request);
+                            }
+                            catch (Exception exception)
+                            {
+                                Useable.lastException = exception;
+                                return UseResponse.Fail_CheckException;
+                            }
+
+                            if (((int) response) != 1)
+                            {
+                                if (response.Succeeded())
+                                {
+                                    Logger.LogError(
+                                        "A IUseableChecked return a invalid value that should have cause success [" +
+                                        response + "], but it was not UseCheck.Success! fix your script.",
+                                        use.implementation);
+                                    return UseResponse.Fail_Checked_BadResult;
+                                }
+
+                                if (use.wantDeclines)
+                                {
+                                    try
+                                    {
+                                        use.useDecline.OnUseDeclined(attempt, response, request);
+                                    }
+                                    catch (Exception exception2)
+                                    {
+                                        Logger.LogError(
+                                            string.Concat(new object[]
+                                            {
+                                                "Caught exception in OnUseDeclined \r\n (response was ", response, ")",
+                                                exception2
+                                            }), use.implementation);
+                                    }
+                                }
+
+                                return response;
+                            }
+                        }
+                        else
+                        {
+                            response = UseResponse.Pass_Unchecked;
+                        }
+
+                        try
+                        {
+                            use._user = attempt;
+                            OnUseEnter(lootableObject, use);
+                            //use.use.OnUseEnter(use);
+                        }
+                        catch (Exception exception3)
+                        {
+                            use._user = null;
+                            Logger.LogError(
+                                "Exception thrown during Useable.Enter. Object not set as used!\r\n" + exception3,
+                                attempt);
+                            Useable.lastException = exception3;
+                            return UseResponse.Fail_EnterException;
+                        }
+
+                        if (response.Succeeded())
+                        {
+                            use.LatchUse();
+                        }
+
+                        return response;
+                    }
+                    finally
+                    {
+                        use.callState = FunctionCallState.None;
+                    }
+                }
+
+                return UseResponse.Fail_Destroyed;
+            }
+
+            if (use._user == attempt)
+            {
+                if (use.wantDeclines && (use.implementation != null))
+                {
+                    try
+                    {
+                        use.useDecline.OnUseDeclined(attempt, UseResponse.Fail_Redundant, request);
+                    }
+                    catch (Exception exception4)
+                    {
+                        Logger.LogError(
+                            "Caught exception in OnUseDeclined \r\n (response was Fail_Redundant)" + exception4,
+                            use.implementation);
+                    }
+                }
+
+                return UseResponse.Fail_Redundant;
+            }
+
+            if (use.wantDeclines && (use.implementation != null))
+            {
+                try
+                {
+                    use.useDecline.OnUseDeclined(attempt, UseResponse.Fail_Vacancy, request);
+                }
+                catch (Exception exception5)
+                {
+                    Logger.LogError("Caught exception in OnUseDeclined \r\n (response was Fail_Vacancy)" + exception5,
+                        use.implementation);
+                }
+            }
+
+            return UseResponse.Fail_Vacancy;
+        }*/
+
 
         public static void RPCFix(Class48 c48, Class5 class5_0, uLink.NetworkPlayer networkPlayer_1)
         {
@@ -2494,6 +3068,81 @@ namespace Fougerite
             return be.Cancelled;
         }
 
+        public static void GenericHook(GenericSpawner gs)
+        {
+            try
+            {
+                if (OnGenericSpawnerLoad != null)
+                {
+                    OnGenericSpawnerLoad(gs);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("GenericSpawnerLoad Error: " + ex);
+            }
+        }
+
+        public static IEnumerator ServerLoadedHook(ServerInit init, string levelName)
+        {
+            yield return RustLevel.Load(levelName);
+            try
+            {
+                if (OnServerLoaded != null)
+                {
+                    OnServerLoaded();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log("ServerLoaded Error: " + ex);
+            }
+            GameObject go = new GameObject();
+            ServerSaveHandler h = go.AddComponent<ServerSaveHandler>();
+            UnityEngine.Object.DontDestroyOnLoad(go);
+            World.GetWorld().ServerSaveHandler = h;
+            Logger.Log("Server Initialized.");
+            UnityEngine.Object.Destroy(init.gameObject);
+            yield break;
+        }
+        
+        public static void DoBeltUseHook(InventoryHolder holder, int beltNum)
+        {
+            try
+            {
+                if (holder == null)
+                {
+                    Logger.LogWarning("[DoBeltUse] Holder is null.");
+                    return;
+                }
+                
+                if (holder.inventory == null)
+                {
+                    Logger.LogWarning("[DoBeltUse] Inventory is null.");
+                    return;
+                }
+
+                if (float.IsNaN(beltNum) || float.IsInfinity(beltNum) || beltNum < 0 || beltNum > 6)
+                {
+                    Logger.LogWarning("[DoBeltUse] Belt number is different. " + beltNum);
+                    return;
+                }
+
+                PlayerInventory inventory;
+                IInventoryItem item;
+                if ((!holder.dead && (holder.GetPlayerInventory(out inventory) &&
+                                      holder.ValidateAntiBeltSpam(NetCull.timeInMillis))) &&
+                    inventory.GetItem(30 + beltNum, out item))
+                {
+                    item.OnBeltUse();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("[DoBeltUse Error] " + ex);
+            }
+        }
+        
         public static void ResetHooks()
         {
             OnPluginInit = delegate
@@ -2647,6 +3296,12 @@ namespace Fougerite
             OnItemMove = delegate (ItemMoveEvent param0)
             {
             };
+            OnGenericSpawnerLoad = delegate (GenericSpawner param0)
+            {
+            };
+            OnServerLoaded = delegate ()
+            {
+            };
             foreach (Fougerite.Player player in Fougerite.Server.GetServer().Players)
             {
                 player.FixInventoryRef();
@@ -2693,7 +3348,7 @@ namespace Fougerite
             if (sw.Elapsed.TotalSeconds > 0) Logger.LogSpeed("ServerStartedEvent Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
         }
 
-        public static void ShowTalker(uLink.NetworkPlayer player, PlayerClient p)
+        /*public static void ShowTalker(uLink.NetworkPlayer player, PlayerClient p)
         {
             Stopwatch sw = null;
             if (Logger.showSpeed)
@@ -2714,7 +3369,53 @@ namespace Fougerite
             if (sw == null) return;
             sw.Stop();
             if (sw.Elapsed.TotalSeconds > 0) Logger.LogSpeed("MicUseEvent Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
+        }*/
+
+        public static bool ConfirmVoice(byte[] data)
+        {
+            if (data == null)
+            {
+                Logger.LogWarning("[VoiceByteOverflown] Received null value.");
+                return false;
+            }
+            if (data.Length > 2350)
+            {
+                Logger.LogWarning("[VoiceByteOverflown] Received a huge amount of byte, clearing. " + data.Length);
+                Array.Clear(data, 0, data.Length);
+                return false;
+            }
+            return true;
         }
+
+        public static void ShowTalker(PlayerClient p, PlayerClient p2)
+        {
+            Stopwatch sw = null;
+            if (Logger.showSpeed)
+            {
+                sw = new Stopwatch();
+                sw.Start();
+            }
+            var pl = Fougerite.Server.Cache[p2.userID];
+            try
+            {
+                if (OnShowTalker != null)
+                    OnShowTalker(p.netPlayer, pl);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("ShowTalkerEvent Error: " + ex.ToString());
+            }
+            if (sw == null) return;
+            sw.Stop();
+            if (sw.Elapsed.TotalSeconds > 0) Logger.LogSpeed("MicUseEvent Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
+        }
+
+        public static void FallDamageCheck(FallDamage fd, float v)
+        {
+            Logger.LogWarning("[Legbreak RPC] Bypassed a legbreak RPC possibly sent by a hacker. Value: " + v);
+            //fd.SetLegInjury(v);
+        }
+
 
         internal static void ModulesLoaded()
         {
@@ -2799,6 +3500,9 @@ namespace Fougerite
         public delegate void BanEventDelegate(BanEvent banEvent);
         public delegate void RepairBenchEventDelegate(RepairEvent repairEvent);
         public delegate void ItemMoveEventDelegate(ItemMoveEvent itemMoveEvent);
+        public delegate void GenericSpawnerLoadDelegate(GenericSpawner genericSpawner);
+        public delegate void ServerLoadedDelegate();
+
         //public delegate void AirdropCrateDroppedDelegate(GameObject go);
     }
 }

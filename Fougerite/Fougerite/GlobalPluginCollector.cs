@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Fougerite
 {
-    public class GlobalPluginCollector
+    public class GlobalPluginCollector : UnityEngine.MonoBehaviour
     {
         private readonly Dictionary<string, object> AllPlugins;
         private readonly Dictionary<string, string> Types;
@@ -17,6 +17,10 @@ namespace Fougerite
             Types = new Dictionary<string, string>();
         }
 
+        /// <summary>
+        /// Gets the instance of the GlobalPluginCollector
+        /// </summary>
+        /// <returns></returns>
         public static GlobalPluginCollector GetPluginCollector()
         {
             if (pcollector == null)
@@ -26,6 +30,12 @@ namespace Fougerite
             return pcollector;
         }
 
+        /// <summary>
+        /// Adds a plugin, this is used by the interpreters or the module loader.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="plugin"></param>
+        /// <param name="typename"></param>
         public void AddPlugin(string name, object plugin, string typename)
         {
             if (AllPlugins.ContainsKey(name))
@@ -37,6 +47,10 @@ namespace Fougerite
             Types[name] = typename;
         }
 
+        /// <summary>
+        /// Removes a plugin from the list.
+        /// </summary>
+        /// <param name="name"></param>
         public void RemovePlugin(string name)
         {
             if (AllPlugins.Keys.Contains(name))
@@ -49,6 +63,11 @@ namespace Fougerite
             }
         }
 
+        /// <summary>
+        /// Gets the plugin's object. This can be anything depending on It's language.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public object GetPlugin(string name)
         {
             if (AllPlugins.Keys.Contains(name))
@@ -58,6 +77,11 @@ namespace Fougerite
             return null;
         }
 
+        /// <summary>
+        /// Gets the plugin's language type by name.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public string GetPluginType(string name)
         {
             if (Types.Keys.Contains(name))

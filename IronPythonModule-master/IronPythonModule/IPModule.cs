@@ -321,6 +321,8 @@ namespace IronPythonModule
                 case "On_PlayerBan": Hooks.OnPlayerBan += new Hooks.BanEventDelegate(plugin.OnBanEvent); break;
                 case "On_RepairBench": Hooks.OnRepairBench += new Hooks.RepairBenchEventDelegate(plugin.OnRepairBench); break;
                 case "On_ItemMove": Hooks.OnItemMove += new Hooks.ItemMoveEventDelegate(plugin.OnItemMove); break;
+				case "On_GenericSpawnLoad": Hooks.OnGenericSpawnerLoad += new Hooks.GenericSpawnerLoadDelegate(plugin.OnGenericSpawnLoad); break;
+				case "On_ServerLoaded": Hooks.OnServerLoaded += new Hooks.ServerLoadedDelegate(plugin.OnServerLoaded); break;
                 }
 			}
 		}
@@ -373,6 +375,8 @@ namespace IronPythonModule
                 case "On_PlayerBan": Hooks.OnPlayerBan -= new Hooks.BanEventDelegate(plugin.OnBanEvent); break;
                 case "On_RepairBench": Hooks.OnRepairBench -= new Hooks.RepairBenchEventDelegate(plugin.OnRepairBench); break;
                 case "On_ItemMove": Hooks.OnItemMove -= new Hooks.ItemMoveEventDelegate(plugin.OnItemMove); break;
+				case "On_GenericSpawnLoad": Hooks.OnGenericSpawnerLoad -= new Hooks.GenericSpawnerLoadDelegate(plugin.OnGenericSpawnLoad); break;
+				case "On_ServerLoaded": Hooks.OnServerLoaded -= new Hooks.ServerLoadedDelegate(plugin.OnServerLoaded); break;
                 }
 			}
 		}

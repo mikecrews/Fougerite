@@ -523,6 +523,16 @@ namespace IronPythonModule {
             this.Invoke("On_ItemMove", new object[] { be });
         }
 
+		public void OnGenericSpawnLoad(GenericSpawner gs)
+		{
+			this.Invoke("On_GenericSpawnLoad", new object[] { gs });
+		}
+		
+		public void OnServerLoaded()
+		{
+			this.Invoke("On_ServerLoaded");
+		}
+
         /*public void OnTimerCB(IPTimedEvent evt) {
 			if (Globals.Contains(evt.Name + "Callback")) {
 				Invoke(evt.Name + "Callback", evt);

@@ -24,6 +24,12 @@
             this.zones = new Dictionary<string, Zone3D>();
         }
 
+        public ServerSaveHandler ServerSaveHandler
+        {
+            get;
+            internal set;
+        }
+
         public static World GetWorld()
         {
             if (world == null)

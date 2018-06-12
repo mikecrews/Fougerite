@@ -5,6 +5,9 @@ using System.Text;
 
 namespace Fougerite.Events
 {
+    /// <summary>
+    /// The ban type of the event.
+    /// </summary>
     public enum BanType
     {
         Player,
@@ -13,6 +16,9 @@ namespace Fougerite.Events
         OnlyIP
     }
 
+    /// <summary>
+    /// This class in used on the BanEvent hook.
+    /// </summary>
     public class BanEvent
     {
         private BanType _type;
@@ -67,46 +73,81 @@ namespace Fougerite.Events
             }
         }
 
+        /// <summary>
+        /// Cancels the event.
+        /// </summary>
         public void Cancel()
         {
             _cancel = true;
         }
 
+        /// <summary>
+        /// Returns the enum ban type.
+        /// </summary>
         public BanType BanType
         {
             get { return _type; }
         }
 
+        /// <summary>
+        /// Returns the banned user.
+        /// </summary>
         public Fougerite.Player BannedUser
         {
             get { return _player; }
         }
 
+        /// <summary>
+        /// Returns the ban executor if its a player.
+        /// </summary>
         public Fougerite.Player BanSender
         {
             get { return _sender; }
         }
 
+        /// <summary>
+        /// Gets the IP of the banned player. Can be null if its an ID ban.
+        /// </summary>
         public string IP
         {
             get { return _ip; }
         }
+        
+        /// <summary>
+        /// Gets the ID of the banned player. Can be null if its an IP ban.
+        /// </summary>
         public string ID
         {
             get { return _id; }
         }
+        
+        /// <summary>
+        /// Gets the name of the banned player. Can be null if its an IP / ID ban.
+        /// </summary>
         public string Name
         {
             get { return _name; }
         }
+        
+        /// <summary>
+        /// Gets the reason for the ban.
+        /// </summary>
         public string Reason
         {
             get { return _reason; }
         }
+        
+        /// <summary>
+        /// Gets the executors name.
+        /// </summary>
         public string BannerName
         {
             get { return _banner; }
         }
+        
+        /// <summary>
+        /// Gets if the event was cancelled.
+        /// </summary>
         public bool Cancelled
         {
             get { return _cancel; }

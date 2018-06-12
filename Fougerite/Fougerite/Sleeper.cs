@@ -18,6 +18,9 @@ namespace Fougerite
             this._name = Fougerite.Server.Cache.ContainsKey(UID) ? Fougerite.Server.Cache[UID].Name : this._sleeper.ownerName;
         }
 
+        /// <summary>
+        /// Gets the Sleeper's health.
+        /// </summary>
         public float Health
         {
             get
@@ -36,6 +39,9 @@ namespace Fougerite
             this._sleeper.UpdateClientHealth();
         }
 
+        /// <summary>
+        /// Destroys the sleeper.
+        /// </summary>
         public void Destroy()
         {
             if (IsDestroyed)

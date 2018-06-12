@@ -2,6 +2,9 @@
 {
     using System;
 
+    /// <summary>
+    /// Basically On_Chat event's argument.
+    /// </summary>
     public class ChatString
     {
         private string ntext;
@@ -13,6 +16,9 @@
             this.ntext = this.origText = str;
         }
 
+        /// <summary>
+        /// Returns the chat message the player originally typed.
+        /// </summary>
         public string OriginalMessage
         {
             get
@@ -21,6 +27,9 @@
             }
         }
 
+        /// <summary>
+        /// Returns the modified chat message or you may set the new chat message value.
+        /// </summary>
         public string NewText
         {
             get
@@ -46,6 +55,11 @@
             }
         }
 
+        /// <summary>
+        /// Checks if a specific string is in the original text.
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns>Returns true / false based on the outcome.</returns>
         public bool Contains(string str)
         {
             return this.origText.Contains(str);
@@ -61,11 +75,23 @@
             return new ChatString(str);
         }
 
+        /// <summary>
+        /// Can replace a chain of characters to the specified value.
+        /// </summary>
+        /// <param name="find"></param>
+        /// <param name="replacement"></param>
+        /// <returns>Returns the new string.</returns>
         public string Replace(string find, string replacement)
         {
             return this.origText.Replace(find, replacement);
         }
 
+        /// <summary>
+        /// Cuts the string from the specified start character number.
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="length"></param>
+        /// <returns>Returns the new string.</returns>
         public string Substring(int start, int length)
         {
             return this.origText.Substring(start, length);

@@ -8,10 +8,31 @@ namespace Fougerite
 
     public class Bootstrap : Facepunch.MonoBehaviour
     {
-        public const string Version = "1.5.8";
+        /// <summary>
+        /// Returns the Current Fougerite Version
+        /// </summary>
+        public const string Version = "1.6.5";
+        /// <summary>
+        /// This value decides wheather we should remove the player classes from the cache upon disconnect.
+        /// </summary>
         public static bool CR = false;
+        /// <summary>
+        /// This value decides wheater we should ban a player for sending invalid packets.
+        /// </summary>
         public static bool BI = false;
-        public static bool TS = false;
+        /// <summary>
+        /// This value decides wheather we should ban a player for Craft hacking.
+        /// </summary>
+        public static bool AutoBanCraft = true;
+        /// <summary>
+        /// This value decides wheather we should enable the default rust decay.
+        /// </summary>
+        public static bool EnableDefaultRustDecay = true;
+        /// <summary>
+        /// This value decides how many connections can be made from the same ip per seconds.
+        /// </summary>
+        public static int FloodConnections = 3;
+        
         internal static readonly Thread CurrentThread = Thread.CurrentThread;
 
         public static void AttachBootstrap()
@@ -37,7 +58,8 @@ namespace Fougerite
         public bool ApplyOptions()
         {
             // look for the string 'false' to disable.  **not a bool check**
-            if (Fougerite.Config.GetValue("Fougerite", "enabled") == "false") {
+            if (Fougerite.Config.GetValue("Fougerite", "enabled") == "false") 
+            {
                 Debug.Log("Fougerite is disabled. No modules loaded. No hooks called.");
                 return false;
             }
@@ -49,10 +71,38 @@ namespace Fougerite
             {
                 BI = Fougerite.Config.GetBoolValue("Fougerite", "BanOnInvalidPacket");
             }
-            if (Fougerite.Config.GetValue("Fougerite", "UseThreadAtServerSave") != null)
+            if (Fougerite.Config.GetValue("Fougerite", "AutoBanCraft") != null)
             {
-                TS = Fougerite.Config.GetBoolValue("Fougerite", "UseThreadAtServerSave");
+                AutoBanCraft = Fougerite.Config.GetBoolValue("Fougerite", "AutoBanCraft");
             }
+            if (Fougerite.Config.GetValue("Fougerite", "FloodConnections") != null)
+            {
+                int v;
+                int.TryParse(Fougerite.Config.GetValue("Fougerite", "FloodConnections"), out v);
+                if (v <= 0)
+                {
+                    v = 2;
+                }
+                FloodConnections = v + 1;
+            }
+            if (Fougerite.Config.GetValue("Fougerite", "SaveTime") != null)
+            {
+                int v;
+                int.TryParse(Fougerite.Config.GetValue("Fougerite", "SaveTime"), out v);
+                if (v <= 0)
+                {
+                    v = 10;
+                }
+                ServerSaveHandler.ServerSaveTime = v;
+            }
+            else
+            {
+                ServerSaveHandler.ServerSaveTime = 10;
+            }
+
+            // Remove the default rust saving methods.
+            save.autosavetime = int.MaxValue;
+            
             if (!Fougerite.Config.GetBoolValue("Fougerite", "deployabledecay") && !Fougerite.Config.GetBoolValue("Fougerite", "decay"))
             {
                 decay.decaytickrate = float.MaxValue / 2;
@@ -65,6 +115,24 @@ namespace Fougerite
                 structure.maxframeattempt = -1;
                 structure.framelimit = -1;
                 structure.minpercentdmg = float.MaxValue;
+            }
+            if (Fougerite.Config.GetValue("Fougerite", "EnableDefaultRustDecay") != null)
+            {
+                EnableDefaultRustDecay = Fougerite.Config.GetBoolValue("Fougerite", "EnableDefaultRustDecay");
+            }
+            else
+            {
+                NetCull.Callbacks.beforeEveryUpdate += new NetCull.UpdateFunctor(EnvDecay.Callbacks.RunDecayThink);
+                Logger.LogWarning("[RustDecay] The default Rust Decay is enabled. (Config option not found)");
+            }
+            if (EnableDefaultRustDecay)
+            {
+                NetCull.Callbacks.beforeEveryUpdate += new NetCull.UpdateFunctor(EnvDecay.Callbacks.RunDecayThink);
+                Logger.LogWarning("[RustDecay] The default Rust Decay is enabled.");
+            }
+            else
+            {
+                Logger.LogWarning("[RustDecay] The default Rust Decay is disabled.");
             }
             return true;
         }

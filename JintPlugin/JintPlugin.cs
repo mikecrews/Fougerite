@@ -302,6 +302,12 @@ namespace JintModule
                 case "On_ItemMove":
                     Hooks.OnItemMove += OnItemMove;
                     break;
+                case "On_GenericSpawnLoad":
+                    Hooks.OnGenericSpawnerLoad += OnGenericSpawnLoad;
+                    break;
+                case "On_ServerLoaded":
+                    Hooks.OnServerLoaded += OnServerLoaded;
+                    break;
                 }
             }
         }
@@ -441,6 +447,12 @@ namespace JintModule
                     break;
                 case "On_ItemMove":
                     Hooks.OnItemMove -= OnItemMove;
+                    break;
+                case "On_GenericSpawnLoad":
+                    Hooks.OnGenericSpawnerLoad -= OnGenericSpawnLoad;
+                    break;
+                case "On_ServerLoaded":
+                    Hooks.OnServerLoaded -= OnServerLoaded;
                     break;
                 }
             }
@@ -935,6 +947,16 @@ namespace JintModule
         public void OnItemMove(ItemMoveEvent be)
         {
             Invoke("On_ItemMove", be);
+        }
+        
+        public void OnGenericSpawnLoad(GenericSpawner gs)
+        {
+            Invoke("On_GenericSpawnLoad", gs);
+        }
+        
+        public void OnServerLoaded()
+        {
+            this.Invoke("On_ServerLoaded");
         }
 
         public void OnPluginShutdown()
