@@ -1244,10 +1244,19 @@ namespace Fougerite
                 return connected;
             }
             ulong uid = user.userID;
+            string nip = user.networkPlayer.externalIP.ToString();
+            string nname = user.displayName.ToString();
             if (uLinkDCCache.Contains(uid))
             {
                 uLinkDCCache.Remove(uid);
             }
+
+            if (FloodCooldown.ContainsKey(nip))
+            {
+                Fougerite.Server.GetServer().BanPlayerIP(nip, nname, "FloodCooldown", "Fougerite");
+                return connected;
+            }
+            
             Fougerite.Server srv = Fougerite.Server.GetServer();
             Fougerite.Player player = new Fougerite.Player(user.playerClient);
             if (!Fougerite.Server.Cache.ContainsKey(uid))
@@ -3637,7 +3646,7 @@ namespace Fougerite
                     }
                     if (structureToPlacePrefab.type != StructureComponent.StructureComponentType.Foundation)
                     {
-                        Debug.Log("ERROR, tried to place non foundation structure on terrain!");
+                        //Debug.Log("ERROR, tried to place non foundation structure on terrain!");
                     }
                     else
                     {
@@ -3649,11 +3658,14 @@ namespace Fougerite
                 {
                     component = uLink.NetworkView.Find(viewID).gameObject.GetComponent<StructureMaster>();
                 }
+                
                 if (component == null)
                 {
-                    Debug.Log("NO master, something seriously wrong");
+                    return;
+                    //Debug.Log("NO master, something seriously wrong");
                 }
-                else if (instance._structureToPlace.CheckLocation(component, position, rotation) && instance.CheckBlockers(position))
+                
+                if (instance._structureToPlace.CheckLocation(component, position, rotation) && instance.CheckBlockers(position))
                 {
                     StructureComponent component2 = NetCull.InstantiateStatic(instance.structureToPlaceName, position, rotation).GetComponent<StructureComponent>();
                     if (component2 != null)
@@ -4692,6 +4704,90 @@ namespace Fougerite
             }
 
             return true;
+        }
+
+        public static bool InternalRPCCheck(Class5 class5)
+        {
+            string str;
+            try
+            {
+                str = class5.class56_0.ipendPoint_0.Address.ToString();
+            }
+            catch
+            {
+                return false;
+            }
+            if (!Server.GetServer().IsBannedIP(str))
+            {
+                try
+                {
+                    Class5.Enum0 num = (Class5.Enum0) class5.enum0_0;
+                    Enum8 num2 = class5.enum8_0;
+                    if (Enum.IsDefined(typeof(Class5.Enum0), num) && Enum.IsDefined(typeof(Enum8), num2))
+                    {
+                        return true;
+                    }
+                }
+                catch
+                {
+                    //ignore
+                }
+
+                Server.GetServer().BanPlayerIP(str, "1", "uLink AuthorizationCheck", "Fougerite");
+                Logger.LogWarning("[Fougerite uLinkInternalCheck] Hoax IP automatically banned, and rejected: " + str, null);
+            }
+            return false;
+        }
+
+        public static void uLinkAuthorizationCheck(Class48 class48, Class5 class5_0)
+        {
+            string str;
+            try
+            {
+                str = class5_0.class56_0.ipendPoint_0.Address.ToString();
+            }
+            catch
+            {
+                return;
+            }
+
+            if (!Server.GetServer().IsBannedIP(str))
+            {
+                NetworkLog.Debug<string, Class5>(NetworkLogFlags.RPC, "Server handling ", class5_0);
+                NetworkLog.Debug<string, string, string, Struct15>(NetworkLogFlags.Timestamp, "Server got message ",
+                    class5_0.string_0, " with timestamp ", class5_0.struct15_0);
+                if (class5_0.method_16())
+                {
+                    NetworkLog.Error<Class5, string>(NetworkLogFlags.BadMessage | NetworkLogFlags.RPC, class5_0,
+                        " is from another server and will be dropped!");
+                }
+                else
+                {
+                    if (!class5_0.method_15())
+                    {
+                        if (class48.bool_1)
+                        {
+                            Logger.LogWarning(
+                                "[Fougerite uLinkAuthorizationCheck] Hoax IP automatically banned, and rejected: " +
+                                str, null);
+                            Server.GetServer().BanPlayerIP(str, "1", "uLink AuthorizationCheck", "Fougerite");
+                            return;
+                        }
+
+                        class48.vmethod_35(new Class5(class48, class5_0));
+                    }
+                    else if (class5_0.method_1())
+                    {
+                        class48.method_281(class5_0);
+                        return;
+                    }
+
+                    if (class5_0.method_14())
+                    {
+                        class48.method_73(class5_0);
+                    }
+                }
+            }
         }
 
         public delegate void BlueprintUseHandlerDelegate(Fougerite.Player player, BPUseEvent ae);
