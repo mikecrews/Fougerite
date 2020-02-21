@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ContentModelStore">
-    <e p="C:\Users\D\.Rider2018.3\system\extResources" t="IncludeRecursive" />
-    <e p="C:\Users\D\.Rider2018.3\system\resharper-host\local\Transient\ReSharperHost\v183\SolutionCaches\_Fougerite.-825522248.00" t="ExcludeRecursive" />
-    <e p="E:\Users\DreTaX\Documents\Visual Studio 2013\Projects\FougeriteProject" t="IncludeFlat">
+    <e p="C:\Users\Felhasználó\.Rider2019.2\system\extResources" t="IncludeRecursive" />
+    <e p="C:\Users\Felhasználó\.Rider2019.2\system\resharper-host\local\Transient\ReSharperHost\v192\SolutionCaches\_Fougerite.-1801986309.00" t="ExcludeRecursive" />
+    <e p="D:\Projects\NETPlatform\Visual Studio 2013\FougeriteProject" t="IncludeFlat">
       <e p="bin" t="ExcludeRecursive" />
       <e p="Fougerite" t="IncludeRecursive">
         <e p="AssemblyInfo.cs" t="Include" />
@@ -11,6 +11,7 @@
           <e p="Bootstrap.cs" t="Include" />
           <e p="ChatString.cs" t="Include" />
           <e p="Config.cs" t="Include" />
+          <e p="CTimer.cs" t="Include" />
           <e p="Data.cs" t="Include" />
           <e p="DataStore.cs" t="Include" />
           <e p="Entity.cs" t="Include" />
