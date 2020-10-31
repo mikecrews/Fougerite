@@ -1,4 +1,6 @@
 ﻿
+using System.Text.RegularExpressions;
+
 namespace RustPP
 {
     using Fougerite;
@@ -127,11 +129,22 @@ namespace RustPP
         {
             return Core.config.GetBoolSetting("Settings", "keepitems");
         }
+        
+        public static string CleanInvalidXmlChars(string text) 
+        { 
+            // From xml spec valid chars: 
+            // #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]     
+            // any Unicode character, excluding the surrogate blocks, FFFE, and FFFF. 
+            const string re = @"[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD\u10000-\u10FFFF]"; 
+            return Regex.Replace(text, re, ""); 
+        }
 
         public static bool loginNotice(Fougerite.Player pl)
         {
             try
             {
+                string name = CleanInvalidXmlChars(pl.Name);
+                
                 if (Core.blackList.Contains(pl.UID))
                 {
                     Core.tempConnect.Add(pl.UID);
@@ -145,11 +158,11 @@ namespace RustPP
                 }
                 if (!Core.userCache.ContainsKey(pl.UID))
                 {
-                    Core.userCache.Add(pl.UID, SecurityElement.Escape(pl.Name));
+                    Core.userCache.Add(pl.UID, name);
                 }
                 else if (pl.Name != Core.userCache[pl.UID])
                 {
-                    Core.userCache[pl.UID] = SecurityElement.Escape(pl.Name);
+                    Core.userCache[pl.UID] = name;
                 }
                 if (Administrator.IsAdmin(pl.UID) && Administrator.GetAdmin(pl.UID).HasPermission("RCON"))
                 {
