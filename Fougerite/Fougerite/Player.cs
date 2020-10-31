@@ -908,6 +908,7 @@ namespace Fougerite
         /// <summary>
         /// Gets if the Player is in the "Moderators" DataStore table or has the Moderator Rust++ permission.
         /// </summary>
+        [ObsoleteAttribute("Most of the plugins should be using PermissionSystem. Refer implementing permissions instead.", false)]
         public bool Moderator
         {
             get

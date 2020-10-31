@@ -539,6 +539,68 @@ namespace Fougerite.Permissions
                 return false;
             }
         }
+
+        public bool AddGroupToPlayer(ulong steamid, string groupname)
+        {
+            lock (_obj)
+            {
+                foreach (var x in _handler.PermissionPlayers.Where(x => x.SteamID == steamid))
+                {
+                    if (!x.Groups.Contains(groupname))
+                    {
+                        x.Groups.Add(groupname);
+                    }
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool RemoveGroupFromPlayer(ulong steamid, string groupname)
+        {
+            groupname = groupname.Trim().ToLower();
+
+            lock (_obj)
+            {
+                foreach (var x in _handler.PermissionPlayers.Where(o => o.SteamID == steamid))
+                {
+                    string gname = x.Groups.FirstOrDefault(y => y.Trim().ToLower() == groupname);
+                    if (gname != null)
+                    {
+                        x.Groups.Remove(gname);
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public bool RemoveGroup(string groupname)
+        {
+            groupname = groupname.Trim().ToLower();
+
+            lock (_obj)
+            {
+                PermissionGroup group = _handler.PermissionGroups.FirstOrDefault(x => x.GroupName.Trim().ToLower() == groupname);
+
+                if (group != null)
+                {
+                    _handler.PermissionGroups.Remove(group);
+                    
+                    foreach (var x in _handler.PermissionPlayers)
+                    {
+                        string gname = x.Groups.FirstOrDefault(y => y.Trim().ToLower() == groupname);
+
+                        if (gname != null)
+                        {
+                            x.Groups.Remove(gname);
+                        }
+                    }
+                }
+            }
+        }
         
         public bool AddPermission(PermissionPlayer permissionPlayer, string permission)
         {
