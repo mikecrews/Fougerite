@@ -9,6 +9,7 @@ using System.Timers;
 using Facepunch;
 using Facepunch.Clocks.Counters;
 using Facepunch.MeshBatch;
+using Fougerite.Permissions;
 using Fougerite.PluginLoaders;
 using Google.ProtocolBuffers.Serialization;
 using MoPhoGames.USpeak.Core.Utils;
@@ -1864,6 +1865,9 @@ namespace Fougerite
             {
                 Logger.LogError("ServerSavedEvent Error: " + ex);
             }
+            
+            // Save the permissions.
+            PermissionSystem.GetPermissionSystem().SaveToDisk();
         }
 
         public static void GlobalQuit()

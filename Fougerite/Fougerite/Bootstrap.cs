@@ -1,5 +1,6 @@
 
 using System.Collections.Generic;
+using Fougerite.Permissions;
 using Fougerite.PluginLoaders;
 
 namespace Fougerite
@@ -14,7 +15,7 @@ namespace Fougerite
         /// <summary>
         /// Returns the Current Fougerite Version
         /// </summary>
-        public const string Version = "1.7.8";
+        public const string Version = "1.7.9";
         /// <summary>
         /// This value decides wheather we should remove the player classes from the cache upon disconnect.
         /// </summary>
@@ -260,6 +261,12 @@ namespace Fougerite
             _timergo.AddComponent<CTimerHandler>();
             UnityEngine.Object.DontDestroyOnLoad(_timergo);
             CTimer.StartWatching();
+            
+            // Initialize sqlite
+            SQLiteConnector.GetInstance.Setup();
+            
+            // Load default permissions API.
+            PermissionSystem.GetPermissionSystem();
 
             Rust.Steam.Server.SetModded();
             Rust.Steam.Server.Official = false;
@@ -267,14 +274,13 @@ namespace Fougerite
             if (ApplyOptions()) 
             {
                 //ModuleManager.LoadModules();
-                LuaPluginLoader.GetInstance();
                 CSharpPluginLoader.GetInstance();
-                JavaScriptPluginLoader.GetInstance();
                 PythonPluginLoader.GetInstance();
+                JavaScriptPluginLoader.GetInstance();
+                LuaPluginLoader.GetInstance();
                 Fougerite.Hooks.ServerStarted();
                 Fougerite.ShutdownCatcher.Hook();
             }
-            SQLiteConnector.GetInstance.Setup();
         }
     }
 }
