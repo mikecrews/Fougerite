@@ -577,13 +577,45 @@ namespace Fougerite.Permissions
             return false;
         }
 
+        public bool CreateGroup(string groupname, List<string> permissions = null, string nickname = null)
+        {
+            if (permissions == null)
+            {
+                permissions = new List<string>();
+            }
+
+            if (nickname == null)
+            {
+                nickname = groupname + "NickName";
+            }
+            
+            lock (_obj)
+            {
+                PermissionGroup group = GetGroupByName(groupname);
+
+                if (group != null)
+                {
+                    return false;
+                }
+                
+                _handler.PermissionGroups.Add(new PermissionGroup()
+                {
+                    GroupName = groupname,
+                    GroupPermissions = permissions,
+                    NickName = nickname
+                });
+
+                return true;
+            }
+        }
+
         public bool RemoveGroup(string groupname)
         {
             groupname = groupname.Trim().ToLower();
 
             lock (_obj)
             {
-                PermissionGroup group = _handler.PermissionGroups.FirstOrDefault(x => x.GroupName.Trim().ToLower() == groupname);
+                PermissionGroup group = GetGroupByName(groupname);
 
                 if (group != null)
                 {
@@ -598,8 +630,12 @@ namespace Fougerite.Permissions
                             x.Groups.Remove(gname);
                         }
                     }
+
+                    return true;
                 }
             }
+
+            return false;
         }
         
         public bool AddPermission(PermissionPlayer permissionPlayer, string permission)
