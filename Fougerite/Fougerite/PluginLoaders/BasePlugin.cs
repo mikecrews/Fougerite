@@ -890,5 +890,10 @@ namespace Fougerite.PluginLoaders
         {
             this.Invoke("On_BeltUse", new object[] {ev});
         }
+
+        public void OnLogger(LoggerEvent ev)
+        {
+            this.Invoke("On_Logger", new object[] {ev});
+        }
     }
 }
