@@ -253,6 +253,11 @@ namespace Fougerite
         public static event BeltUseDelegate OnBeltUse;
 
         /// <summary>
+        /// This delegate runs when the logger functions are triggered.
+        /// </summary>
+        public static event LoggerDelegate OnLogger;
+
+        /// <summary>
         /// This value returns if the server is shutting down.
         /// </summary>
         public static bool IsShuttingDown
@@ -3889,6 +3894,9 @@ namespace Fougerite
             OnBeltUse = delegate (BeltUseEvent param0)
             {
             };
+            OnLogger = delegate(LoggerEvent param0)
+            {
+            };
             foreach (Fougerite.Player player in Fougerite.Server.GetServer().Players)
             {
                 player.FixInventoryRef();
@@ -4212,6 +4220,22 @@ namespace Fougerite
             if (inventory.collection.Get(data, out item))
             {
                 DropHelper.DropItem(inventory, data);
+            }
+        }
+
+        public static void LoggerEvent(LoggerEventType type, string message)
+        {
+            try
+            {
+                if (OnLogger != null)
+                {
+                    Events.LoggerEvent evt = new LoggerEvent(type, message);
+                    OnLogger(evt);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("LoggerEvent Error: " + ex.ToString(), null, true);
             }
         }
 
@@ -4846,6 +4870,7 @@ namespace Fougerite
         public delegate void SupplySignalDelegate(SupplySignalExplosionEvent supplySignalExplosionEvent);
         public delegate void AllPluginsLoadedDelegate();
         public delegate void BeltUseDelegate(BeltUseEvent beltUseEvent);
+        public delegate void LoggerDelegate(LoggerEvent loggerEvent);
 
         //public delegate void AirdropCrateDroppedDelegate(GameObject go);
     }

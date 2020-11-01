@@ -51,6 +51,7 @@
     <Compile Include="Fougerite\Events\ExtendedTimedEvent.cs" />
     <Compile Include="Fougerite\Events\GrenadeThrowEvent.cs" />
     <Compile Include="Fougerite\Events\ItemMoveEvent.cs" />
+    <Compile Include="Fougerite\Events\LoggerEvent.cs" />
     <Compile Include="Fougerite\Events\LootStartEvent.cs" />
     <Compile Include="Fougerite\Events\RepairEvent.cs" />
     <Compile Include="Fougerite\Events\ShootEvent.cs" />

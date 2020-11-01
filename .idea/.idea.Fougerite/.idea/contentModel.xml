@@ -35,6 +35,7 @@
             <e p="InventoryModEvent.cs" t="Include" />
             <e p="ItemMoveEvent.cs" t="Include" />
             <e p="ItemPickupEvent.cs" t="Include" />
+            <e p="LoggerEvent.cs" t="Include" />
             <e p="LootStartEvent.cs" t="Include" />
             <e p="PlayerApprovalEvent.cs" t="Include" />
             <e p="RepairEvent.cs" t="Include" />
