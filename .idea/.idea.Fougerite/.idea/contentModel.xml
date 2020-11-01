@@ -173,6 +173,7 @@
           <e p="RulesCommand.cs" t="Include" />
           <e p="SaveAllCommand.cs" t="Include" />
           <e p="ShareCommand.cs" t="Include" />
+          <e p="ShareListCommand.cs" t="Include" />
           <e p="ShutDownCommand.cs" t="Include" />
           <e p="SpawnItemCommand.cs" t="Include" />
           <e p="StarterCommand.cs" t="Include" />
