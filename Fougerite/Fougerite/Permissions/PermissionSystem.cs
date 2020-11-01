@@ -260,9 +260,10 @@ namespace Fougerite.Permissions
         public PermissionGroup GetGroupByName(string groupname)
         {
             groupname = groupname.Trim().ToLower();
+            int uniqueid = GetUniqueID(groupname);
             lock (_obj)
             {
-                return _handler.PermissionGroups.FirstOrDefault(x => x.UniqueID == GetUniqueID(groupname));
+                return _handler.PermissionGroups.FirstOrDefault(x => x.UniqueID == uniqueid);
             }
         }
         
