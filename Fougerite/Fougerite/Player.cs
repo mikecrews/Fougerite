@@ -27,6 +27,7 @@ namespace Fougerite
         private string name;
         private string ipaddr;
         private readonly List<string> _CommandCancelList;
+        private readonly List<string> _ConsoleCommandCancelList;
         private bool disconnected;
         private Vector3 _lastpost;
         internal bool _adminoff = false;
@@ -51,6 +52,7 @@ namespace Fougerite
             this.ipaddr = client.netPlayer.externalIP;
             this.FixInventoryRef();
             this._CommandCancelList = new List<string>();
+            this._ConsoleCommandCancelList = new List<string>();
             this._lastpost = Vector3.zero;
             this._np = client.netUser.networkPlayer;
         }
@@ -224,6 +226,38 @@ namespace Fougerite
                 this.ourPlayer.netUser.Kick(NetErrorReason, SendNotification);
                 IsDisconnecting = true;
             }
+        }
+
+        /// <summary>
+        /// The specified console command cannot be used by this player.
+        /// </summary>
+        /// <param name="cmd"></param>
+        public void RestrictConsoleCommand(string cmd)
+        {
+            if (!ConsoleCommandCancelList.Contains(cmd))
+            {
+                ConsoleCommandCancelList.Add(cmd);
+            }
+        }
+        
+        /// <summary>
+        /// The specified console command will be unrestricted and the player will be able to use It again.
+        /// </summary>
+        /// <param name="cmd"></param>
+        public void UnRestrictConsoleCommand(string cmd)
+        {
+            if (ConsoleCommandCancelList.Contains(cmd))
+            {
+                ConsoleCommandCancelList.Remove(cmd);
+            }
+        }
+        
+        /// <summary>
+        /// Does what It says.
+        /// </summary>
+        public void CleanRestrictedConsoleCommands()
+        {
+            ConsoleCommandCancelList.Clear();
         }
 
         /// <summary>
@@ -960,6 +994,17 @@ namespace Fougerite
         public List<string> CommandCancelList
         {
             get { return this._CommandCancelList; }
+        }
+
+        /// <summary>
+        /// Returns the list of the restricted console commands of the player.
+        /// </summary>
+        public List<string> ConsoleCommandCancelList
+        {
+            get
+            {
+                return _ConsoleCommandCancelList;
+            }
         }
 
         /// <summary>
