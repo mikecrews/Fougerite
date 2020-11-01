@@ -589,10 +589,10 @@ namespace Fougerite.Permissions
                 nickname = groupname + "NickName";
             }
             
+            PermissionGroup group = GetGroupByName(groupname);
+            
             lock (_obj)
             {
-                PermissionGroup group = GetGroupByName(groupname);
-
                 if (group != null)
                 {
                     return false;
@@ -612,11 +612,10 @@ namespace Fougerite.Permissions
         public bool RemoveGroup(string groupname)
         {
             groupname = groupname.Trim().ToLower();
+            PermissionGroup group = GetGroupByName(groupname);
 
             lock (_obj)
             {
-                PermissionGroup group = GetGroupByName(groupname);
-
                 if (group != null)
                 {
                     _handler.PermissionGroups.Remove(group);
@@ -668,7 +667,6 @@ namespace Fougerite.Permissions
             permission = permission.Trim().ToLower();
             lock (_obj)
             {
-
                 foreach (var x in _handler.PermissionPlayers.Where(x => x.SteamID == steamid))
                 {
                     if (x.Permissions.Contains(permission))
@@ -690,7 +688,6 @@ namespace Fougerite.Permissions
             
             lock (_obj)
             {
-
                 foreach (var x in _handler.PermissionPlayers.Where(x => x.SteamID == player.UID))
                 {
                     if (x.Permissions.Contains(permission))
@@ -715,7 +712,6 @@ namespace Fougerite.Permissions
             
             lock (_obj)
             {
-                
                 foreach (var x in _handler.PermissionPlayers.Where(x => x.SteamID == permissionPlayer.SteamID))
                 {
                     if (x.Permissions.Contains(permission))
@@ -735,7 +731,6 @@ namespace Fougerite.Permissions
             permission = permission.Trim().ToLower();
             lock (_obj)
             {
-
                 foreach (var x in _handler.PermissionPlayers.Where(x => x.SteamID == steamid))
                 {
                     if (x.Permissions.Contains(permission))
