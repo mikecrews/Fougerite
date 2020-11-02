@@ -63,6 +63,7 @@
     <Compile Include="Commands\RulesCommand.cs" />
     <Compile Include="Commands\SaveAllCommand.cs" />
     <Compile Include="Commands\ShareCommand.cs" />
+    <Compile Include="Commands\ShareListCommand.cs" />
     <Compile Include="Commands\ShutDownCommand.cs" />
     <Compile Include="Commands\SpawnItemCommand.cs" />
     <Compile Include="Commands\StarterCommand.cs" />

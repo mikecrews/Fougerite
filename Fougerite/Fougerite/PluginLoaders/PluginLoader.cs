@@ -66,7 +66,8 @@
             "On_ServerLoaded",
             "On_SupplySignalExploded",
             "On_PlayerMove",
-            "On_BeltUse"
+            "On_BeltUse",
+            "On_Logger"
         };
 
         public void Initialize()
@@ -329,6 +330,9 @@
                         case "On_BeltUse":
                             Hooks.OnBeltUse += new Hooks.BeltUseDelegate(plugin.OnBeltUse);
                             break;
+                        case "On_Logger":
+                            Hooks.OnLogger += new Hooks.LoggerDelegate(plugin.OnLogger);
+                            break;
                     }
                 }
             }
@@ -496,6 +500,9 @@
                             break;
                         case "On_BeltUse":
                             Hooks.OnBeltUse -= new Hooks.BeltUseDelegate(plugin.OnBeltUse);
+                            break;
+                        case "On_Logger":
+                            Hooks.OnLogger -= new Hooks.LoggerDelegate(plugin.OnLogger);
                             break;
                     }
                 }

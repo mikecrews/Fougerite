@@ -51,6 +51,7 @@
     <Compile Include="Fougerite\Events\ExtendedTimedEvent.cs" />
     <Compile Include="Fougerite\Events\GrenadeThrowEvent.cs" />
     <Compile Include="Fougerite\Events\ItemMoveEvent.cs" />
+    <Compile Include="Fougerite\Events\LoggerEvent.cs" />
     <Compile Include="Fougerite\Events\LootStartEvent.cs" />
     <Compile Include="Fougerite\Events\RepairEvent.cs" />
     <Compile Include="Fougerite\Events\ShootEvent.cs" />
@@ -60,6 +61,10 @@
     <Compile Include="Fougerite\JsonAPI.cs" />
     <Compile Include="Fougerite\Loom.cs" />
     <Compile Include="Fougerite\MySQLConnector.cs" />
+    <Compile Include="Fougerite\Permissions\PermissionGroup.cs" />
+    <Compile Include="Fougerite\Permissions\PermissionHandler.cs" />
+    <Compile Include="Fougerite\Permissions\PermissionPlayer.cs" />
+    <Compile Include="Fougerite\Permissions\PermissionSystem.cs" />
     <Compile Include="Fougerite\PluginLoaders\BasePlugin.cs" />
     <Compile Include="Fougerite\PluginLoaders\CountedInstance.cs" />
     <Compile Include="Fougerite\PluginLoaders\CSharpPluginLoader.cs" />

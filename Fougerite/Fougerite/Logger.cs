@@ -1,4 +1,6 @@
 ﻿
+using Fougerite.Events;
+
 namespace Fougerite
 {
     using System;
@@ -143,6 +145,8 @@ namespace Fougerite
             Debug.Log(Message, Context);
             Message = "[Console] " + Message;
             WriteLog(Message);
+            
+            Hooks.LoggerEvent(LoggerEventType.Log, Message);
         }
         
         public static void LogRPC(string Message)
@@ -159,6 +163,8 @@ namespace Fougerite
             {
                 Debug.LogException(ex);
             }
+            
+            Hooks.LoggerEvent(LoggerEventType.LogSpeed, Message);
         }
 
         public static void LogSpeed(string Message)
@@ -169,6 +175,8 @@ namespace Fougerite
             SpeedLogWriter = new System.IO.StreamWriter(Path.Combine(LogsFolder, "HookSpeed.log"), true);
             SpeedLogWriter.WriteLine(Message);
             SpeedLogWriter.Close();
+            
+            Hooks.LoggerEvent(LoggerEventType.LogSpeed, Message);
         }
 
         public static void LogWarning(string Message, UnityEngine.Object Context = null)
@@ -176,14 +184,21 @@ namespace Fougerite
             Debug.LogWarning(Message, Context);
             Message = "[Warning] " + Message;
             WriteLog(Message);
+            
+            Hooks.LoggerEvent(LoggerEventType.LogWarning, Message);
         }
 
-        public static void LogError(string Message, UnityEngine.Object Context = null)
+        public static void LogError(string Message, UnityEngine.Object Context = null, bool IgnoreHook = false)
         {
             if (showErrors)
                 Debug.LogError(Message, Context);
             Message = "[Error] " + Message;
             WriteLog(Message);
+
+            if (!IgnoreHook)
+            {
+                Hooks.LoggerEvent(LoggerEventType.LogError, Message);
+            }
         }
 
         public static void LogException(Exception Ex, UnityEngine.Object Context = null)
@@ -202,6 +217,8 @@ namespace Fougerite
 
             string Message = "[Exception] [ " + Trace + "]\r\n" + Ex.ToString();
             WriteLog(Message);
+            
+            Hooks.LoggerEvent(LoggerEventType.LogException, Message);
         }
 
         public static void LogDebug(string Message, UnityEngine.Object Context = null)
@@ -210,13 +227,17 @@ namespace Fougerite
                 Debug.Log("[DEBUG] " + Message, Context);
             Message = "[Debug] " + Message;
             WriteLog(Message);
+            
+            Hooks.LoggerEvent(LoggerEventType.LogDebug, Message);
         }
 
-        public static void ChatLog(string Sender, string Msg)
+        public static void ChatLog(string Sender, string Message)
         {
-            Msg = "[CHAT] " + Sender + ": " + Msg;
-            Debug.Log(Msg);
-            WriteChat(Msg);
+            Message = "[CHAT] " + Sender + ": " + Message;
+            Debug.Log(Message);
+            WriteChat(Message);
+            
+            Hooks.LoggerEvent(LoggerEventType.ChatLog, Message);
         }
     }
 }

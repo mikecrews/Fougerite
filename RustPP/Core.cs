@@ -235,6 +235,7 @@ namespace RustPP
             InstaKOAllCommand command25 = new InstaKOAllCommand();
             command25.AdminFlags = "CanInstaKOAll";
             ChatCommand.AddCommand("/instakoall", command25);
+            ChatCommand.AddCommand("/sharelist", new ShareListCommand());
         }
 
         public static bool IsEnabled()

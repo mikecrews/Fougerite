@@ -9,6 +9,7 @@ using System.Timers;
 using Facepunch;
 using Facepunch.Clocks.Counters;
 using Facepunch.MeshBatch;
+using Fougerite.Permissions;
 using Fougerite.PluginLoaders;
 using Google.ProtocolBuffers.Serialization;
 using MoPhoGames.USpeak.Core.Utils;
@@ -252,6 +253,11 @@ namespace Fougerite
         public static event BeltUseDelegate OnBeltUse;
 
         /// <summary>
+        /// This delegate runs when the logger functions are triggered.
+        /// </summary>
+        public static event LoggerDelegate OnLogger;
+
+        /// <summary>
         /// This value returns if the server is shutting down.
         /// </summary>
         public static bool IsShuttingDown
@@ -461,15 +467,24 @@ namespace Fougerite
             StringComparison ic = StringComparison.InvariantCultureIgnoreCase;
             bool external = a.argUser == null;
             bool adminRights = (a.argUser != null && a.argUser.admin) || external;
+            string Class = a.Class;
+            string Function = a.Function;
+            
+            
+            ulong UID = 0;
+            if (a.argUser != null)
+            {
+                UID = a.argUser.userID;
+            }
 
             string userid = "[external][external]";
             if (adminRights && !external)
-                userid = string.Format("[{0}][{1}]", a.argUser.displayName, a.argUser.userID.ToString());
+                userid = string.Format("[{0}][{1}]", a.argUser.displayName, UID.ToString());
 
-            string logmsg = string.Format("[ConsoleReceived] userid={0} adminRights={1} command={2}.{3} args={4}", userid, adminRights.ToString(), a.Class, a.Function, (a.HasArgs(1) ? a.ArgsStr : "none"));
+            string logmsg = string.Format("[ConsoleReceived] userid={0} adminRights={1} command={2}.{3} args={4}", userid, adminRights.ToString(), Class, Function, (a.HasArgs(1) ? a.ArgsStr : "none"));
             Logger.LogDebug(logmsg);
 
-            if (a.Class.Equals("fougerite", ic) && a.Function.Equals("reload", ic))
+            if (Class.Equals("fougerite", ic) && Function.Equals("reload", ic))
             {
                 if (adminRights)
                 {
@@ -493,7 +508,7 @@ namespace Fougerite
                     }
                 }
             }
-            else if (a.Class.Equals("fougerite", ic) && a.Function.Equals("unload", ic))
+            else if (Class.Equals("fougerite", ic) && Function.Equals("unload", ic))
             {
                 if (adminRights)
                 {
@@ -519,7 +534,7 @@ namespace Fougerite
                     }
                 }
             }
-            else if (a.Class.Equals("fougerite", ic) && a.Function.Equals("save", ic))
+            else if (Class.Equals("fougerite", ic) && Function.Equals("save", ic))
             {
                 if (adminRights)
                 {
@@ -537,7 +552,7 @@ namespace Fougerite
                     }
                 }
             }
-            else if (a.Class.Equals("fougerite", ic) && a.Function.Equals("urgentsave", ic))
+            else if (Class.Equals("fougerite", ic) && Function.Equals("urgentsave", ic))
             {
                 if (adminRights)
                 {
@@ -555,7 +570,7 @@ namespace Fougerite
                     }
                 }
             }
-            else if (a.Class.Equals("fougerite", ic) && a.Function.Equals("rpctracer", ic))
+            else if (Class.Equals("fougerite", ic) && Function.Equals("rpctracer", ic))
             {
                 if (adminRights)
                 {
@@ -563,36 +578,53 @@ namespace Fougerite
                     a.ReplyWith("Toggled rpctracer to:" + Logger.showRPC);
                 }
             }
-            else if (OnConsoleReceived != null)
+            
+            string clss = Class.ToLower();
+            string func = Function.ToLower();
+            string data;
+            if (!string.IsNullOrEmpty(func))
             {
-                string clss = a.Class.ToLower();
-                string func = a.Function.ToLower();
-                string data;
-                if (!string.IsNullOrEmpty(func))
+                data = clss + "." + func;
+            }
+            else
+            {
+                data = clss;
+            }
+                
+            // Allow server console to execute anything
+            if (!external && Server.GetServer().ConsoleCommandCancelList.Contains(data))
+            {
+                a.ReplyWith("This console command is globally restricted!");
+                return false;
+            }
+
+            // We have a player
+            if (UID > 0)
+            {
+                Fougerite.Player player = Fougerite.Server.GetServer().FindPlayer(UID);
+                if (player != null && player.ConsoleCommandCancelList.Contains(data))
                 {
-                    data = clss + "." + func;
-                }
-                else
-                {
-                    data = clss;
-                }
-                if (Server.GetServer().ConsoleCommandCancelList.Contains(data))
-                {
+                    a.ReplyWith("This console command is restricted for you!");
+                    player.Message("This console command is restricted for you!");
                     return false;
                 }
+            }
+            
+            if (OnConsoleReceived != null)
+            {
                 try
                 {
                     OnConsoleReceived(ref a, external);
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError("ConsoleReceived Error: " + ex.ToString());
+                    Logger.LogError("ConsoleReceived Error: " + ex);
                 }
             }
 
             if (string.IsNullOrEmpty(a.Reply))
             {
-                a.ReplyWith(string.Format("Fougerite: {0}.{1} was executed!", a.Class, a.Function));
+                a.ReplyWith(string.Format("Fougerite: {0}.{1} was executed!", Class, Function));
             }
             if (sw == null) return true;
             sw.Stop();
@@ -1864,6 +1896,9 @@ namespace Fougerite
             {
                 Logger.LogError("ServerSavedEvent Error: " + ex);
             }
+            
+            // Save the permissions.
+            PermissionSystem.GetPermissionSystem().SaveToDisk();
         }
 
         public static void GlobalQuit()
@@ -3885,6 +3920,9 @@ namespace Fougerite
             OnBeltUse = delegate (BeltUseEvent param0)
             {
             };
+            OnLogger = delegate(LoggerEvent param0)
+            {
+            };
             foreach (Fougerite.Player player in Fougerite.Server.GetServer().Players)
             {
                 player.FixInventoryRef();
@@ -4208,6 +4246,22 @@ namespace Fougerite
             if (inventory.collection.Get(data, out item))
             {
                 DropHelper.DropItem(inventory, data);
+            }
+        }
+
+        public static void LoggerEvent(LoggerEventType type, string message)
+        {
+            try
+            {
+                if (OnLogger != null)
+                {
+                    Events.LoggerEvent evt = new LoggerEvent(type, message);
+                    OnLogger(evt);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("LoggerEvent Error: " + ex.ToString(), null, true);
             }
         }
 
@@ -4842,6 +4896,7 @@ namespace Fougerite
         public delegate void SupplySignalDelegate(SupplySignalExplosionEvent supplySignalExplosionEvent);
         public delegate void AllPluginsLoadedDelegate();
         public delegate void BeltUseDelegate(BeltUseEvent beltUseEvent);
+        public delegate void LoggerDelegate(LoggerEvent loggerEvent);
 
         //public delegate void AirdropCrateDroppedDelegate(GameObject go);
     }

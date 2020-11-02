@@ -1,4 +1,8 @@
 ﻿
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml;
+
 namespace RustPP
 {
     using Fougerite;
@@ -132,6 +136,9 @@ namespace RustPP
         {
             try
             {
+                string name = SecurityElement.Escape(pl.Name);
+                name = Util.GetUtil().ToValidXmlCharactersString(name);
+                
                 if (Core.blackList.Contains(pl.UID))
                 {
                     Core.tempConnect.Add(pl.UID);
@@ -145,11 +152,11 @@ namespace RustPP
                 }
                 if (!Core.userCache.ContainsKey(pl.UID))
                 {
-                    Core.userCache.Add(pl.UID, SecurityElement.Escape(pl.Name));
+                    Core.userCache.Add(pl.UID, name);
                 }
                 else if (pl.Name != Core.userCache[pl.UID])
                 {
-                    Core.userCache[pl.UID] = SecurityElement.Escape(pl.Name);
+                    Core.userCache[pl.UID] = name;
                 }
                 if (Administrator.IsAdmin(pl.UID) && Administrator.GetAdmin(pl.UID).HasPermission("RCON"))
                 {
