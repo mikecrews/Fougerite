@@ -187,8 +187,18 @@ namespace Fougerite
             
             Hooks.LoggerEvent(LoggerEventType.LogWarning, Message);
         }
+        
+        public static void LogError(string Message, UnityEngine.Object Context = null)
+        {
+            if (showErrors)
+                Debug.LogError(Message, Context);
+            Message = "[Error] " + Message;
+            WriteLog(Message);
+            
+            Hooks.LoggerEvent(LoggerEventType.LogError, Message);
+        }
 
-        public static void LogError(string Message, UnityEngine.Object Context = null, bool IgnoreHook = false)
+        public static void LogErrorIgnore(string Message, UnityEngine.Object Context = null, bool IgnoreHook = false)
         {
             if (showErrors)
                 Debug.LogError(Message, Context);
