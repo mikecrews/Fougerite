@@ -4261,7 +4261,7 @@ namespace Fougerite
             }
             catch (Exception ex)
             {
-                Logger.LogError("LoggerEvent Error: " + ex.ToString(), null, true);
+                Logger.LogErrorIgnore("LoggerEvent Error: " + ex.ToString(), null, true);
             }
         }
 
