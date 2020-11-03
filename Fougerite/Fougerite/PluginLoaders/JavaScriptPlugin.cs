@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using Fougerite.Permissions;
 using Jint;
 using Jint.Expressions;
 
@@ -75,6 +76,7 @@ namespace Fougerite.PluginLoaders
                     .SetParameter("JSON", Fougerite.JsonAPI.GetInstance)
                     .SetParameter("MySQL", Fougerite.MySQLConnector.GetInstance)
                     .SetParameter("SQLite", Fougerite.SQLiteConnector.GetInstance)
+                    .SetParameter("PermissionSystem", PermissionSystem.GetPermissionSystem())
                     .SetFunction("importClass", new importit(importClass));
                 Program = JintEngine.Compile(code, false);
 
@@ -113,7 +115,9 @@ namespace Fougerite.PluginLoaders
         public Jint.Native.JsInstance importClass(string type)
         {
             Engine.SetParameter(type.Split('.').Last(), Util.GetUtil().TryFindReturnType(type));
-            return (Engine.Global as Jint.Native.JsDictionaryObject)[type.Split('.').Last()];
+            Jint.Native.JsDictionaryObject jsobj = (Engine.Global as Jint.Native.JsDictionaryObject);
+            
+            return jsobj != null ? jsobj[type.Split('.').Last()] : null;
         }
     }
 }
