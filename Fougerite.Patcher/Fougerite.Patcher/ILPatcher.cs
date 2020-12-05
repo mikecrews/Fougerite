@@ -2040,6 +2040,8 @@ namespace Fougerite.Patcher
         private void SupplySignalExplosion()
         {
             TypeDefinition SignalGrenade = rustAssembly.MainModule.GetType("SignalGrenade");
+            SignalGrenade.GetField("fuseLength").SetPublic(true);
+            
             MethodDefinition OnDone = SignalGrenade.GetMethod("OnDone");
 
             MethodDefinition method = hooksClass.GetMethod("OnSupplySignalExplosion");

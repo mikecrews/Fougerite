@@ -17,8 +17,10 @@ namespace Fougerite.Permissions
     public class PermissionSystem
     {
         private static PermissionSystem _instance;
-        private static object _obj = new object();
-        private PermissionHandler _handler;
+        private static readonly object _obj = new object();
+        private static readonly object _obj2 = new object();
+        private readonly PermissionHandler _handler;
+        private readonly Dictionary<ulong, bool> _disabledpermissions = new Dictionary<ulong, bool>();
 
         /// <summary>
         /// PermissionSystem is a Singleton.
@@ -27,6 +29,78 @@ namespace Fougerite.Permissions
         {
             _handler = new PermissionHandler();
             ReloadPermissions();
+        }
+
+        /// <summary>
+        /// Temporarily remove all permissions of a player.
+        /// Lasts until the server restarts, or removed manually.
+        /// </summary>
+        /// <param name="steamid"></param>
+        /// <param name="removeDefaultGroupPermissions"></param>
+        /// <returns></returns>
+        public bool ForceOffPermissions(ulong steamid, bool removeDefaultGroupPermissions)
+        {
+            lock (_obj2)
+            {
+                if (!_disabledpermissions.ContainsKey(steamid))
+                {
+                    _disabledpermissions.Add(steamid, removeDefaultGroupPermissions);
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Removes the temporarily added effect.
+        /// </summary>
+        /// <param name="steamid"></param>
+        /// <returns></returns>
+        public bool RemoveForceOffPermissions(ulong steamid)
+        {
+            lock (_obj2)
+            {
+                if (_disabledpermissions.ContainsKey(steamid))
+                {
+                    _disabledpermissions.Remove(steamid);
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Checks if the player has its permissions forced off.
+        /// </summary>
+        /// <param name="steamid"></param>
+        /// <returns></returns>
+        public bool HasPermissionsForcedOff(ulong steamid)
+        {
+            lock (_obj2)
+            {
+                return _disabledpermissions.ContainsKey(steamid);
+            }
+        }
+
+        /// <summary>
+        /// Checks if a player has its permissions forced off and the
+        /// default permissions as well.
+        /// </summary>
+        /// <param name="steamid"></param>
+        /// <returns></returns>
+        public bool HasDefaultPermissionsForcedOff(ulong steamid)
+        {
+            lock (_obj2)
+            {
+                if (_disabledpermissions.ContainsKey(steamid))
+                {
+                    return _disabledpermissions[steamid];
+                }
+
+                return false;
+            }
         }
 
         /// <summary>
@@ -377,6 +451,13 @@ namespace Fougerite.Permissions
             {
                 return false;
             }
+
+            // Check if permissions were revoked.
+            if (HasDefaultPermissionsForcedOff(player.UID))
+            {
+                return false;
+            }
+            
             permission = permission.Trim().ToLower();
 
             var permissionplayer = GetPlayerBySteamID(player);
@@ -391,6 +472,12 @@ namespace Fougerite.Permissions
                     if (haspermission) return true;
                 }
                 
+                return false;
+            }
+            
+            // Check if permissions were revoked, but without default permissions.
+            if (HasPermissionsForcedOff(player.UID))
+            {
                 return false;
             }
             
