@@ -34,6 +34,8 @@ namespace Fougerite.Permissions
         /// <summary>
         /// Temporarily remove all permissions of a player.
         /// Lasts until the server restarts, or removed manually.
+        /// removeDefaultGroupPermissions true removes the default
+        /// group's as well.
         /// </summary>
         /// <param name="steamid"></param>
         /// <param name="removeDefaultGroupPermissions"></param>
