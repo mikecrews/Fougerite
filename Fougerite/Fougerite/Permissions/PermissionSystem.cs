@@ -106,6 +106,20 @@ namespace Fougerite.Permissions
         }
 
         /// <summary>
+        /// Returns the dictionary of forced off permissions.
+        /// </summary>
+        public Dictionary<ulong, bool> DisabledPermissions
+        {
+            get
+            {
+                lock (_obj2)
+                {
+                    return _disabledpermissions;
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets the unique identifier of a string based on MD5.
         /// This is used for group names.
         /// </summary>
