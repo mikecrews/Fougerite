@@ -635,6 +635,12 @@ namespace Fougerite.Permissions
             return false;
         }
         
+        /// <summary>
+        /// Tries to add player to a group.
+        /// </summary>
+        /// <param name="steamid"></param>
+        /// <param name="groupname"></param>
+        /// <returns></returns>
         public bool AddGroupToPlayer(ulong steamid, string groupname)
         {
             groupname = groupname.Trim().ToLower();
@@ -656,6 +662,12 @@ namespace Fougerite.Permissions
             return false;
         }
 
+        /// <summary>
+        /// Tries to remove a player from a group.
+        /// </summary>
+        /// <param name="steamid"></param>
+        /// <param name="groupname"></param>
+        /// <returns></returns>
         public bool RemoveGroupFromPlayer(ulong steamid, string groupname)
         {
             groupname = groupname.Trim().ToLower();
