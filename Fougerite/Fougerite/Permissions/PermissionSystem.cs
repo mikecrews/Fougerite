@@ -106,7 +106,7 @@ namespace Fougerite.Permissions
         }
 
         /// <summary>
-        /// Returns the dictionary of forced off permissions.
+        /// Returns a shallow copied dictionary of forced off permissions.
         /// </summary>
         public Dictionary<ulong, bool> DisabledPermissions
         {
@@ -114,7 +114,7 @@ namespace Fougerite.Permissions
             {
                 lock (_obj2)
                 {
-                    return _disabledpermissions;
+                    return new Dictionary<ulong, bool>(_disabledpermissions);
                 }
             }
         }
@@ -318,26 +318,28 @@ namespace Fougerite.Permissions
 
         /// <summary>
         /// Returns all the existing groups.
+        /// Note that the list is a shallow copy.
         /// </summary>
         /// <returns></returns>
         public List<PermissionGroup> GetPermissionGroups()
         {
             lock (_obj)
             {
-                return _handler.PermissionGroups;
+                return new List<PermissionGroup>(_handler.PermissionGroups);
             }
         }
         
         /// <summary>
         /// Returns all the players that exist in the permission database.
         /// This might be a large list depending on how many players you have added to It.
+        /// Note that the list is a shallow copy.
         /// </summary>
         /// <returns></returns>
         public List<PermissionPlayer> GetPermissionPlayers()
         {
             lock (_obj)
             {
-                return _handler.PermissionPlayers;
+                return new List<PermissionPlayer>(_handler.PermissionPlayers);
             }
         }
 
@@ -356,12 +358,12 @@ namespace Fougerite.Permissions
                 return _handler.PermissionGroups.FirstOrDefault(x => x.UniqueID == uniqueid);
             }
         }
-        
+
         /// <summary>
         /// Tries to find the group by name.
         /// Returns null if doesn't exist.
         /// </summary>
-        /// <param name="groupname"></param>
+        /// <param name="groupid"></param>
         /// <returns></returns>
         public PermissionGroup GetGroupByID(int groupid)
         {
@@ -404,30 +406,23 @@ namespace Fougerite.Permissions
             }
         }
 
+        /// <summary>
+        /// Checks if the target player is member of a group.
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="groupname"></param>
+        /// <returns></returns>
         public bool PlayerHasGroup(Fougerite.Player player, string groupname)
         {
-            groupname = groupname.Trim().ToLower();
-            if (groupname == "default")
-            {
-                return true;
-            }
-
-            int id = GetUniqueID(groupname);
-            
-            if (player == null)
-            {
-                return false;
-            }
-
-            var permissionplayer = GetPlayerBySteamID(player);
-            if (permissionplayer == null)
-            {
-                return false;
-            }
-            
-            return permissionplayer.Groups.Any(x => GetUniqueID(x.Trim().ToLower()) == id);
+            return player != null && PlayerHasGroup(player.UID, groupname);
         }
         
+        /// <summary>
+        /// Checks if the target player is member of a group.
+        /// </summary>
+        /// <param name="steamid"></param>
+        /// <param name="groupname"></param>
+        /// <returns></returns>
         public bool PlayerHasGroup(ulong steamid, string groupname)
         {
             groupname = groupname.Trim().ToLower();
@@ -442,41 +437,42 @@ namespace Fougerite.Permissions
                 return false;
             }
             
-            return permissionplayer.Groups.Any(x => x.Trim().ToLower() == groupname);
+            int id = GetUniqueID(groupname);
+            
+            return permissionplayer.Groups.Any(x => GetUniqueID(x.Trim().ToLower()) == id);
         }
         
+        /// <summary>
+        /// Checks if the target player is member of a group.
+        /// </summary>
+        /// <param name="permissionplayer"></param>
+        /// <param name="groupname"></param>
+        /// <returns></returns>
         public bool PlayerHasGroup(PermissionPlayer permissionplayer, string groupname)
         {
-            groupname = groupname.Trim().ToLower();
-            if (groupname == "default")
-            {
-                return true;
-            }
-            
-            if (permissionplayer == null)
-            {
-                return false;
-            }
-
-            return permissionplayer.Groups.Any(x => x.Trim().ToLower() == groupname);
+            return permissionplayer != null && PlayerHasGroup(permissionplayer.SteamID, groupname);
         }
         
-        public bool PlayerHasPermission(Fougerite.Player player, string permission)
+        /// <summary>
+        /// Checks if a target player has a permission.
+        /// You should acknowledge that a player can has It's
+        /// permissions forced off. Check for that with
+        /// HasDefaultPermissionsForcedOff and HasPermissionsForcedOff
+        /// </summary>
+        /// <param name="steamid"></param>
+        /// <param name="permission"></param>
+        /// <returns></returns>
+        public bool PlayerHasPermission(ulong steamid, string permission)
         {
-            if (player == null)
-            {
-                return false;
-            }
-
             // Check if permissions were revoked.
-            if (HasDefaultPermissionsForcedOff(player.UID))
+            if (HasDefaultPermissionsForcedOff(steamid))
             {
                 return false;
             }
             
             permission = permission.Trim().ToLower();
 
-            var permissionplayer = GetPlayerBySteamID(player);
+            var permissionplayer = GetPlayerBySteamID(steamid);
             // Player has no specific permissions, or groups. Check for the default group.
             // This is gonna apply to most of the players of the server.
             if (permissionplayer == null)
@@ -492,7 +488,7 @@ namespace Fougerite.Permissions
             }
             
             // Check if permissions were revoked, but without default permissions.
-            if (HasPermissionsForcedOff(player.UID))
+            if (HasPermissionsForcedOff(steamid))
             {
                 return false;
             }
@@ -519,72 +515,87 @@ namespace Fougerite.Permissions
 
             return false;
         }
-
-        public bool CreatePermissionPlayer(Fougerite.Player player)
+        
+        /// <summary>
+        /// Checks if a target player has a permission.
+        /// You should acknowledge that a player can has It's
+        /// permissions forced off. Check for that with
+        /// HasDefaultPermissionsForcedOff and HasPermissionsForcedOff
+        /// </summary>
+        /// <param name="permissionPlayer"></param>
+        /// <param name="permission"></param>
+        /// <returns></returns>
+        public bool PlayerHasPermission(PermissionPlayer permissionPlayer, string permission)
         {
-            if (player == null)
-            {
-                return false;
-            }
-            
-            var permissionplayer = GetPlayerBySteamID(player);
-            if (permissionplayer == null)
-            {
-                lock (_obj)
-                {
-                    _handler.PermissionPlayers.Add(new PermissionPlayer()
-                    {
-                        Groups = new List<string>(),
-                        Permissions = new List<string>(),
-                        SteamID = player.UID
-                    });
-                    return true;
-                }
-            }
-
-            return false;
+            return permissionPlayer != null && PlayerHasPermission(permissionPlayer.SteamID, permission);
         }
         
-        public bool CreatePermissionPlayer(ulong steamid)
+        /// <summary>
+        /// Checks if a target player has a permission.
+        /// You should acknowledge that a player can has It's
+        /// permissions forced off. Check for that with
+        /// HasDefaultPermissionsForcedOff and HasPermissionsForcedOff
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="permission"></param>
+        /// <returns></returns>
+        public bool PlayerHasPermission(Fougerite.Player player, string permission)
+        {
+            return player != null && PlayerHasPermission(player.UID, permission);
+        }
+
+        /// <summary>
+        /// Adds a new permission player to the list.
+        /// </summary>
+        /// <param name="player"></param>
+        /// <returns></returns>
+        public PermissionPlayer CreatePermissionPlayer(Fougerite.Player player)
+        {
+            return player == null ? null : CreatePermissionPlayer(player.UID);
+        }
+        
+        /// <summary>
+        /// Adds a new permission player to the list.
+        /// </summary>
+        /// <param name="steamid"></param>
+        /// <returns></returns>
+        public PermissionPlayer CreatePermissionPlayer(ulong steamid)
         {
             var permissionplayer = GetPlayerBySteamID(steamid);
             if (permissionplayer == null)
             {
+                PermissionPlayer permissionPlayer = new PermissionPlayer()
+                {
+                    Groups = new List<string>(),
+                    Permissions = new List<string>(),
+                    SteamID = steamid
+                };
+                
                 lock (_obj)
                 {
-                    _handler.PermissionPlayers.Add(new PermissionPlayer()
-                    {
-                        Groups = new List<string>(),
-                        Permissions = new List<string>(),
-                        SteamID = steamid
-                    });
-                    return true;
+                    _handler.PermissionPlayers.Add(permissionPlayer);
+                    return permissionPlayer;
                 }
             }
 
-            return false;
+            return permissionplayer;
         }
 
+        /// <summary>
+        /// Tries to remove the target player from the list.
+        /// </summary>
+        /// <param name="player"></param>
+        /// <returns></returns>
         public bool RemovePermissionPlayer(Fougerite.Player player)
         {
-            if (player == null)
-            {
-                return false;
-            }
-            
-            var permissionplayer = GetPlayerBySteamID(player.UID);
-            if (permissionplayer != null)
-            {
-                lock (_obj)
-                {
-                    _handler.PermissionPlayers.Remove(permissionplayer);
-                    return true;
-                }
-            }
-
-            return false;
+            return player != null && RemovePermissionPlayer(player.UID);
         }
 
+        /// <summary>
+        /// Tries to remove the target player from the list.
+        /// </summary>
+        /// <param name="permissionPlayer"></param>
+        /// <returns></returns>
         public bool RemovePermissionPlayer(PermissionPlayer permissionPlayer)
         {
             if (permissionPlayer == null)
@@ -604,6 +615,11 @@ namespace Fougerite.Permissions
             return false;
         }
 
+        /// <summary>
+        /// Tries to remove the target player from the list.
+        /// </summary>
+        /// <param name="steamid"></param>
+        /// <returns></returns>
         public bool RemovePermissionPlayer(ulong steamid)
         {
             var permissionplayer = GetPlayerBySteamID(steamid);
@@ -618,43 +634,22 @@ namespace Fougerite.Permissions
 
             return false;
         }
-
-        public bool AddPermission(Fougerite.Player player, string permission)
-        {
-            if (player == null)
-            {
-                return false;
-            }
-            permission = permission.Trim().ToLower();
-            
-            lock (_obj)
-            {
-                foreach (var x in _handler.PermissionPlayers.Where(x => x.SteamID == player.UID))
-                {
-                    if (x.Permissions.Contains(permission))
-                    {
-                        return true;
-                    }
-                    
-                    x.Permissions.Add(permission);
-                    return true;
-                }
-
-                return false;
-            }
-        }
-
+        
         public bool AddGroupToPlayer(ulong steamid, string groupname)
         {
+            groupname = groupname.Trim().ToLower();
             lock (_obj)
             {
-                foreach (var x in _handler.PermissionPlayers.Where(x => x.SteamID == steamid))
+                PermissionPlayer player = _handler.PermissionPlayers.SingleOrDefault(x => x.SteamID == steamid);
+                if (player != null)
                 {
-                    if (!x.Groups.Contains(groupname))
+                    int id = GetUniqueID(groupname);
+                    string gname = player.Groups.FirstOrDefault(y => GetUniqueID(y.Trim().ToLower()) == id);
+                    if (string.IsNullOrEmpty(gname))
                     {
-                        x.Groups.Add(groupname);
+                        player.Groups.Add(groupname);
+                        return true;
                     }
-                    return true;
                 }
             }
 
@@ -667,12 +662,14 @@ namespace Fougerite.Permissions
 
             lock (_obj)
             {
-                foreach (var x in _handler.PermissionPlayers.Where(o => o.SteamID == steamid))
+                PermissionPlayer player = _handler.PermissionPlayers.SingleOrDefault(x => x.SteamID == steamid);
+                if (player != null)
                 {
-                    string gname = x.Groups.FirstOrDefault(y => y.Trim().ToLower() == groupname);
-                    if (gname != null)
+                    int id = GetUniqueID(groupname);
+                    string gname = player.Groups.FirstOrDefault(y => GetUniqueID(y.Trim().ToLower()) == id);
+                    if (!string.IsNullOrEmpty(gname))
                     {
-                        x.Groups.Remove(gname);
+                        player.Groups.Remove(gname);
                         return true;
                     }
                 }
@@ -681,6 +678,13 @@ namespace Fougerite.Permissions
             return false;
         }
 
+        /// <summary>
+        /// Tries to create a permission group, unless It already exists.
+        /// </summary>
+        /// <param name="groupname"></param>
+        /// <param name="permissions"></param>
+        /// <param name="nickname"></param>
+        /// <returns></returns>
         public bool CreateGroup(string groupname, List<string> permissions = null, string nickname = null)
         {
             if (permissions == null)
@@ -694,14 +698,14 @@ namespace Fougerite.Permissions
             }
             
             PermissionGroup group = GetGroupByName(groupname);
+            if (group != null)
+            {
+                return false;
+            }
             
             lock (_obj)
             {
-                if (group != null)
-                {
-                    return false;
-                }
-                
+                // Unique ID is set through setter.
                 _handler.PermissionGroups.Add(new PermissionGroup()
                 {
                     GroupName = groupname,
@@ -713,6 +717,11 @@ namespace Fougerite.Permissions
             }
         }
 
+        /// <summary>
+        /// Completely disbands a permission group, and removes everyone from It.
+        /// </summary>
+        /// <param name="groupname"></param>
+        /// <returns></returns>
         public bool RemoveGroup(string groupname)
         {
             groupname = groupname.Trim().ToLower();
@@ -723,12 +732,12 @@ namespace Fougerite.Permissions
                 if (group != null)
                 {
                     _handler.PermissionGroups.Remove(group);
+                    int id = GetUniqueID(groupname);
                     
                     foreach (var x in _handler.PermissionPlayers)
                     {
-                        string gname = x.Groups.FirstOrDefault(y => y.Trim().ToLower() == groupname);
-
-                        if (gname != null)
+                        string gname = x.Groups.FirstOrDefault(y => GetUniqueID(y.Trim().ToLower()) == id);
+                        if (!string.IsNullOrEmpty(gname))
                         {
                             x.Groups.Remove(gname);
                         }
@@ -741,44 +750,48 @@ namespace Fougerite.Permissions
             return false;
         }
         
-        public bool AddPermission(PermissionPlayer permissionPlayer, string permission)
+        /// <summary>
+        /// Tries to add permission to a player.
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="permission"></param>
+        /// <returns></returns>
+        public bool AddPermission(Fougerite.Player player, string permission)
         {
-            if (permissionPlayer == null)
-            {
-                return false;
-            }
-            permission = permission.Trim().ToLower();
-            
-            lock (_obj)
-            {
-                foreach (var x in _handler.PermissionPlayers.Where(x => x.SteamID == permissionPlayer.SteamID))
-                {
-                    if (x.Permissions.Contains(permission))
-                    {
-                        return true;
-                    }
-                    
-                    x.Permissions.Add(permission);
-                    return true;
-                }
-
-                return false;
-            }
+            return player != null && AddPermission(player.UID, permission);
         }
         
+        /// <summary>
+        /// Tries to add permission to a player.
+        /// </summary>
+        /// <param name="permissionPlayer"></param>
+        /// <param name="permission"></param>
+        /// <returns></returns>
+        public bool AddPermission(PermissionPlayer permissionPlayer, string permission)
+        {
+            return permissionPlayer != null && AddPermission(permissionPlayer.SteamID, permission);
+        }
+        
+        /// <summary>
+        /// Tries to add permission to a player.
+        /// </summary>
+        /// <param name="steamid"></param>
+        /// <param name="permission"></param>
+        /// <returns></returns>
         public bool AddPermission(ulong steamid, string permission)
         {
             permission = permission.Trim().ToLower();
             lock (_obj)
             {
-                foreach (var x in _handler.PermissionPlayers.Where(x => x.SteamID == steamid))
+                PermissionPlayer permissionPlayer = _handler.PermissionPlayers.SingleOrDefault(x => x.SteamID == steamid);
+                if (permissionPlayer != null)
                 {
-                    if (x.Permissions.Contains(permission))
+                    if (permissionPlayer.Permissions.Contains(permission))
                     {
                         return true;
                     }
                     
-                    x.Permissions.Add(permission);
+                    permissionPlayer.Permissions.Add(permission);
                     return true;
                 }
 
@@ -786,60 +799,45 @@ namespace Fougerite.Permissions
             }
         }
 
+        /// <summary>
+        /// Tries to remove a permission from a player.
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="permission"></param>
+        /// <returns></returns>
         public bool RemovePermission(Fougerite.Player player, string permission)
         {
-            permission = permission.Trim().ToLower();
-            
-            lock (_obj)
-            {
-                foreach (var x in _handler.PermissionPlayers.Where(x => x.SteamID == player.UID))
-                {
-                    if (x.Permissions.Contains(permission))
-                    {
-                        x.Permissions.Remove(permission);
-                    }
-
-                    return true;
-                }
-
-                return false;
-            }
+            return player != null && RemovePermission(player.UID, permission);
         }
         
+        /// <summary>
+        /// Tries to remove a permission from a player.
+        /// </summary>
+        /// <param name="permissionPlayer"></param>
+        /// <param name="permission"></param>
+        /// <returns></returns>
         public bool RemovePermission(PermissionPlayer permissionPlayer, string permission)
         {
-            if (permissionPlayer == null)
-            {
-                return false;
-            }
-            permission = permission.Trim().ToLower();
-            
-            lock (_obj)
-            {
-                foreach (var x in _handler.PermissionPlayers.Where(x => x.SteamID == permissionPlayer.SteamID))
-                {
-                    if (x.Permissions.Contains(permission))
-                    {
-                        x.Permissions.Remove(permission);
-                    }
-
-                    return true;
-                }
-
-                return false;
-            }
+            return permissionPlayer != null && RemovePermission(permissionPlayer.SteamID, permission);
         }
         
+        /// <summary>
+        /// Tries to remove a permission from a player.
+        /// </summary>
+        /// <param name="steamid"></param>
+        /// <param name="permission"></param>
+        /// <returns></returns>
         public bool RemovePermission(ulong steamid, string permission)
         {
             permission = permission.Trim().ToLower();
             lock (_obj)
             {
-                foreach (var x in _handler.PermissionPlayers.Where(x => x.SteamID == steamid))
+                PermissionPlayer permissionPlayer = _handler.PermissionPlayers.SingleOrDefault(x => x.SteamID == steamid);
+                if (permissionPlayer != null)
                 {
-                    if (x.Permissions.Contains(permission))
+                    if (permissionPlayer.Permissions.Contains(permission))
                     {
-                        x.Permissions.Remove(permission);
+                        permissionPlayer.Permissions.Remove(permission);
                     }
 
                     return true;
