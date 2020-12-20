@@ -738,7 +738,8 @@ namespace Fougerite
                 if (terrain.y > target.y)
                     target = terrain + bump * 2;
 
-                if (structures.Count() == 1)
+                var structureMasters = structures as StructureMaster[] ?? structures.ToArray();
+                if (structureMasters.Count() == 1)
                 {
                     if (Physics.Raycast(target, Vector3.down, out hit))
                     {
@@ -749,8 +750,8 @@ namespace Fougerite
                         }
                     }
 
-                    StructureMaster structure = structures.FirstOrDefault<StructureMaster>();
-                    if (!structure.containedBounds.Contains(target) || hit.distance > 8f)
+                    StructureMaster structure = structureMasters.FirstOrDefault<StructureMaster>();
+                    if (structure != null && !structure.containedBounds.Contains(target) || hit.distance > 8f)
                         target = hit.point + bump;
 
                     float distance = Vector3.Distance(this.Location, target);
@@ -777,7 +778,7 @@ namespace Fougerite
                         return false;
                     }
                 }
-                else if (structures.Count() == 0)
+                if (!structureMasters.Any())
                 {
                     if (terrain.y < seaLevel)
                     {
@@ -814,15 +815,13 @@ namespace Fougerite
 
                     return this.TeleportTo(target, callhook);
                 }
-                else
-                {
-                    Logger.LogDebug(string.Format("[{0}] structures.Count is {1}. Weird.", me,
-                        structures.Count().ToString()));
-                    Logger.LogDebug(string.Format("[{0}] target={1} terrain{2}", me, target.ToString(),
-                        terrain.ToString()));
-                    this.Message("Cannot execute safely with the parameters supplied.");
-                    return false;
-                }
+
+                Logger.LogDebug(string.Format("[{0}] structures.Count is {1}. Weird.", me,
+                    structureMasters.Count().ToString()));
+                Logger.LogDebug(string.Format("[{0}] target={1} terrain{2}", me, target.ToString(),
+                    terrain.ToString()));
+                this.Message("Cannot execute safely with the parameters supplied.");
+                return false;
             }
 
             return false;
@@ -1017,7 +1016,7 @@ namespace Fougerite
             if (this.IsOnline)
             {
                 PlayerInventory invent = this.Inventory.InternalInventory as PlayerInventory;
-                if (invent.KnowsBP(dataBlock))
+                if (invent != null && invent.KnowsBP(dataBlock))
                 {
                     return true;
                 }
@@ -1060,9 +1059,12 @@ namespace Fougerite
 
             PlayerInventory invent = this.Inventory.InternalInventory as PlayerInventory;
             ICollection<BlueprintDataBlock> collection = new List<BlueprintDataBlock>();
-            foreach (BlueprintDataBlock blueprintDataBlock in invent.GetBoundBPs())
+            if (invent != null)
             {
-                collection.Add(blueprintDataBlock);
+                foreach (BlueprintDataBlock blueprintDataBlock in invent.GetBoundBPs())
+                {
+                    collection.Add(blueprintDataBlock);
+                }
             }
 
             return collection;
