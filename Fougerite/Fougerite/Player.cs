@@ -889,7 +889,7 @@ namespace Fougerite
         /// <param name="state"></param>
         public void ForceAdminOff(bool state)
         {
-            if (Fougerite.Server.Cache[UID] != null)
+            if (Fougerite.Server.Cache.ContainsKey(UID) && Fougerite.Server.Cache[UID] != null)
             {
                 Fougerite.Server.Cache[UID]._adminoff = state;
             }
@@ -909,7 +909,7 @@ namespace Fougerite
         /// <param name="state"></param>
         public void ForceModeratorOff(bool state)
         {
-            if (Fougerite.Server.Cache[UID] != null)
+            if (Fougerite.Server.Cache.ContainsKey(UID) && Fougerite.Server.Cache[UID] != null)
             {
                 Fougerite.Server.Cache[UID]._modoff = state;
             }

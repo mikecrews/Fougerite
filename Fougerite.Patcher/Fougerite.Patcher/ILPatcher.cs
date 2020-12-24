@@ -434,18 +434,16 @@ namespace Fougerite.Patcher
             type.GetMethod("SendCurrentLooter").SetPublic(true);
             type.GetMethod("DestroyInExit").SetPublic(true);
             type.GetMethod("StopLooting").SetPublic(true);
-
-            // TODO: Requires further testing, some reason that method cannot be patched even while deobfuscated.
-            /*Useable.GetMethod("EnsureServer").SetPublic(true);
-            Useable.GetMethod("ClearException").SetPublic(true);
-            Useable.GetField("hasException").SetPublic(true);
-            Useable.GetField("implementation").SetPublic(true);
-            Useable.GetField("useCheck").SetPublic(true);
-            Useable.GetField("useDecline").SetPublic(true);
-            Useable.GetField("wantDeclines").SetPublic(true);
-            Useable.GetField("lastException").SetPublic(true);
-            Useable.GetField("canCheck").SetPublic(true);
-            Useable.GetField("use").SetPublic(true);*/
+            
+            foreach (var x in Useable.Fields)
+            {
+                x.SetPublic(true);
+            }
+            foreach (var x in Useable.Methods)
+            {
+                x.SetPublic(true);
+            }
+            
 
             MethodDefinition SetLooter = type.GetMethod("SetLooter");
             MethodDefinition method = hooksClass.GetMethod("SetLooter");
@@ -456,16 +454,17 @@ namespace Fougerite.Patcher
             iLProcessor.Body.Instructions.Add(Instruction.Create(OpCodes.Callvirt, this.rustAssembly.MainModule.Import(method)));
             iLProcessor.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
             
-            // TODO: Requires further testing, some reason that method cannot be patched even while deobfuscated.
-            /*MethodDefinition method2 = hooksClass.GetMethod("EnterHandler");
+            MethodDefinition method3 = hooksClass.GetMethod("EnterHandler");
             MethodDefinition Enter = Useable.GetMethod("Enter");
-            ILProcessor iLProcessor2 = Enter.Body.GetILProcessor();
-            iLProcessor2.Body.Instructions.Clear();
-            iLProcessor2.Body.Instructions.Add(Instruction.Create(OpCodes.Ldarg_0));
-            iLProcessor2.Body.Instructions.Add(Instruction.Create(OpCodes.Ldarg_1));
-            iLProcessor2.Body.Instructions.Add(Instruction.Create(OpCodes.Ldarg_2));
-            iLProcessor2.Body.Instructions.Add(Instruction.Create(OpCodes.Callvirt, this.rustAssembly.MainModule.Import(method2)));
-            iLProcessor2.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));*/
+            ILProcessor iLProcessor3 = Enter.Body.GetILProcessor();
+            iLProcessor3.Body.Variables.Clear();
+            iLProcessor3.Body.ExceptionHandlers.Clear();
+            iLProcessor3.Body.Instructions.Clear();
+            iLProcessor3.Body.Instructions.Add(Instruction.Create(OpCodes.Ldarg_0));
+            iLProcessor3.Body.Instructions.Add(Instruction.Create(OpCodes.Ldarg_1));
+            iLProcessor3.Body.Instructions.Add(Instruction.Create(OpCodes.Ldarg_2));
+            iLProcessor3.Body.Instructions.Add(Instruction.Create(OpCodes.Callvirt, this.rustAssembly.MainModule.Import(method3)));
+            iLProcessor3.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
             
             
             MethodDefinition OnUseEnter = type.GetMethod("OnUseEnter");

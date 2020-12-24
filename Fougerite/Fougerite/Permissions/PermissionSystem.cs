@@ -395,15 +395,7 @@ namespace Fougerite.Permissions
         /// <returns></returns>
         public PermissionPlayer GetPlayerBySteamID(Fougerite.Player player)
         {
-            if (player == null)
-            {
-                return null;
-            }
-            
-            lock (_obj)
-            {
-                return _handler.PermissionPlayers.FirstOrDefault(x => x.SteamID == player.UID);
-            }
+            return player == null ? null : GetPlayerBySteamID(player.UID);
         }
 
         /// <summary>
