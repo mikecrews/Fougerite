@@ -110,21 +110,27 @@
                     this.Victim = this.Attacker;
                     ICollection<string> list = new List<string>();
                     Fougerite.Player vic = this.Victim as Fougerite.Player;
-                    if (vic.IsStarving)
+                    if (vic != null)
                     {
-                        list.Add("Starvation");
-                    }
-                    if (vic.IsRadPoisoned)
-                    {
-                        list.Add("Radiation");
-                    }
-                    if (vic.IsPoisoned)
-                    {
-                        list.Add("Poison");
-                    }
-                    if (vic.IsBleeding)
-                    {
-                        list.Add("Bleeding");
+                        if (vic.IsStarving)
+                        {
+                            list.Add("Starvation");
+                        }
+
+                        if (vic.IsRadPoisoned)
+                        {
+                            list.Add("Radiation");
+                        }
+
+                        if (vic.IsPoisoned)
+                        {
+                            list.Add("Poison");
+                        }
+
+                        if (vic.IsBleeding)
+                        {
+                            list.Add("Bleeding");
+                        }
                     }
 
                     if (list.Contains("Bleeding"))

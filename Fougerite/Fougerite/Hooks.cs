@@ -693,7 +693,10 @@ namespace Fougerite
                 decayList.Add(entity);
                 return de.DamageAmount;
             }
-            catch { }
+            catch
+            {
+                // Ignore? Was left here from magma
+            }
             if (sw != null)
             {
                 sw.Stop();
@@ -1787,7 +1790,10 @@ namespace Fougerite
         public static void AnimalMovement(BaseAIMovement m, BasicWildLifeAI ai, ulong simMillis)
         {
             var movement = m as NavMeshMovement;
-            if (!movement) { return; }
+            if (movement == null || !movement)
+            {
+                return;
+            }
 
             if (movement._agent.pathStatus == NavMeshPathStatus.PathInvalid)
             {
@@ -2644,33 +2650,12 @@ namespace Fougerite
                 sw.Start();
             }
             var ulinkuser = uLink.NetworkView.Get((UnityEngine.MonoBehaviour)use.user).owner;
-            NetUser user = ulinkuser.GetLocalData() as NetUser;
             lo._useable = use;
             lo._currentlyUsingPlayer = ulinkuser;
             lo._inventory.AddNetListener(lo._currentlyUsingPlayer);
             lo.SendCurrentLooter();
             lo.CancelInvokes();
             lo.InvokeRepeating("RadialCheck", 0f, 10f);
-            LootStartEvent lt = null;
-            if (user != null)
-            {
-                Fougerite.Player pl = Fougerite.Server.GetServer().FindPlayer(user.userID);
-                if (pl != null)
-                {
-                    lt = new LootStartEvent(lo, pl, use, ulinkuser);
-                    try
-                    {
-                        if (OnLootUse != null)
-                        {
-                            OnLootUse(lt);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.LogError("LootStartEvent Error: " + ex);
-                    }
-                }
-            }
 
             if (sw != null)
             {
@@ -2678,15 +2663,10 @@ namespace Fougerite
                 if (sw.Elapsed.TotalSeconds > 0)
                     Logger.LogSpeed("ChestEnterEvent Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
             }
-
-            //return lt;
         }
 
-        /*public static UseResponse EnterHandler(Useable use, Character attempt, UseEnterRequest request)
+        public static UseResponse EnterHandler(Useable use, Character attempt, UseEnterRequest request)
         {
-            LootableObject lootableObject = use.GetComponent<LootableObject>();
-            Logger.Log("null: " + lootableObject);
-
             if (!use.canUse)
             {
                 return UseResponse.Fail_NotIUseable;
@@ -2715,6 +2695,7 @@ namespace Fougerite
             {
                 return UseResponse.Fail_UserDead;
             }
+            LootableObject lootableObject = use.GetComponent<LootableObject>();
 
             if (use._user == null)
             {
@@ -2775,6 +2756,42 @@ namespace Fougerite
                         try
                         {
                             use._user = attempt;
+                            try
+                            {
+                                var ulinkuser = uLink.NetworkView.Get((UnityEngine.MonoBehaviour) use.user).owner;
+                                NetUser user = ulinkuser.GetLocalData() as NetUser;
+                                LootStartEvent lt = null;
+                                if (user != null)
+                                {
+                                    Fougerite.Player pl = Fougerite.Server.GetServer().FindPlayer(user.userID);
+                                    if (pl != null)
+                                    {
+                                        lt = new LootStartEvent(lootableObject, pl, use, ulinkuser);
+                                        try
+                                        {
+                                            if (OnLootUse != null)
+                                            {
+                                                OnLootUse(lt);
+                                            }
+                                        }
+                                        catch (Exception ex2)
+                                        {
+                                            Logger.LogError("LootStartEvent Error: " + ex2);
+                                        }
+
+                                        if (lt.IsCancelled)
+                                        {
+                                            use._user = null;
+                                            return UseResponse.Pass_Unchecked;
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception ex3)
+                            {
+                                Logger.LogError("LootStartEvent Outer Error: " + ex3);
+                            }
+
                             OnUseEnter(lootableObject, use);
                             //use.use.OnUseEnter(use);
                         }
@@ -2837,7 +2854,7 @@ namespace Fougerite
             }
 
             return UseResponse.Fail_Vacancy;
-        }*/
+        }
 
 
         public static void RPCFix(Class48 c48, Class5 class5_0, uLink.NetworkPlayer networkPlayer_1)
