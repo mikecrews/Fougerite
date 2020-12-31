@@ -346,6 +346,7 @@ namespace Fougerite.Permissions
         /// <summary>
         /// Tries to find the group by name.
         /// Returns null if doesn't exist.
+        /// Object is not a shallow copy.
         /// </summary>
         /// <param name="groupname"></param>
         /// <returns></returns>
@@ -362,6 +363,7 @@ namespace Fougerite.Permissions
         /// <summary>
         /// Tries to find the group by name.
         /// Returns null if doesn't exist.
+        /// Object is not a shallow copy.
         /// </summary>
         /// <param name="groupid"></param>
         /// <returns></returns>
@@ -376,6 +378,7 @@ namespace Fougerite.Permissions
         /// <summary>
         /// Tries to find the player's permissions.
         /// Returns null if doesn't exist.
+        /// Object is not a shallow copy.
         /// </summary>
         /// <param name="steamid"></param>
         /// <returns></returns>
@@ -390,6 +393,7 @@ namespace Fougerite.Permissions
         /// <summary>
         /// Tries to find the player's permissions.
         /// Returns null if doesn't exist.
+        /// Object is not a shallow copy.
         /// </summary>
         /// <param name="player"></param>
         /// <returns></returns>
@@ -572,6 +576,35 @@ namespace Fougerite.Permissions
 
             return permissionplayer;
         }
+        
+        /// <summary>
+        /// Adds a new permission player to the list with specific group list and permissions.
+        /// </summary>
+        /// <param name="steamid"></param>
+        /// <param name="groups"></param>
+        /// <param name="permissions"></param>
+        /// <returns></returns>
+        public PermissionPlayer CreatePermissionPlayer(ulong steamid, List<string> groups, List<string> permissions)
+        {
+            var permissionplayer = GetPlayerBySteamID(steamid);
+            if (permissionplayer == null)
+            {
+                PermissionPlayer permissionPlayer = new PermissionPlayer()
+                {
+                    Groups = groups,
+                    Permissions = permissions,
+                    SteamID = steamid
+                };
+                
+                lock (_obj)
+                {
+                    _handler.PermissionPlayers.Add(permissionPlayer);
+                    return permissionPlayer;
+                }
+            }
+
+            return permissionplayer;
+        }
 
         /// <summary>
         /// Tries to remove the target player from the list.
@@ -731,9 +764,9 @@ namespace Fougerite.Permissions
             groupname = groupname.Trim().ToLower();
             PermissionGroup group = GetGroupByName(groupname);
 
-            lock (_obj)
+            if (group != null)
             {
-                if (group != null)
+                lock (_obj)
                 {
                     _handler.PermissionGroups.Remove(group);
                     int id = GetUniqueID(groupname);
@@ -744,6 +777,140 @@ namespace Fougerite.Permissions
                         if (!string.IsNullOrEmpty(gname))
                         {
                             x.Groups.Remove(gname);
+                        }
+                    }
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to add a permission to a group.
+        /// </summary>
+        /// <param name="groupname"></param>
+        /// <param name="permission"></param>
+        /// <returns></returns>
+        public bool AddPermissionToGroup(string groupname, string permission)
+        {
+            groupname = groupname.Trim().ToLower();
+            permission = permission.Trim().ToLower();
+            PermissionGroup group = GetGroupByName(groupname);
+
+            if (group != null)
+            {
+                lock (_obj)
+                {
+                    if (!group.GroupPermissions.Contains(permission))
+                    {
+                        group.GroupPermissions.Add(permission);
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to remove a permission from a group.
+        /// </summary>
+        /// <param name="groupname"></param>
+        /// <param name="permission"></param>
+        /// <returns></returns>
+        public bool RemovePermissionFromGroup(string groupname, string permission)
+        {
+            groupname = groupname.Trim().ToLower();
+            permission = permission.Trim().ToLower();
+            PermissionGroup group = GetGroupByName(groupname);
+
+            if (group != null)
+            {
+                lock (_obj)
+                {
+                    if (group.GroupPermissions.Contains(permission))
+                    {
+                        group.GroupPermissions.Remove(permission);
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if a group has a permission.
+        /// </summary>
+        /// <param name="groupname"></param>
+        /// <param name="permission"></param>
+        /// <returns></returns>
+        public bool GroupHasPermission(string groupname, string permission)
+        {
+            groupname = groupname.Trim().ToLower();
+            permission = permission.Trim().ToLower();
+            PermissionGroup group = GetGroupByName(groupname);
+
+            if (group != null)
+            {
+                lock (_obj)
+                {
+                    return group.GroupPermissions.Contains(permission);
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Changes the group's nickname.
+        /// </summary>
+        /// <param name="groupname"></param>
+        /// <param name="nickname"></param>
+        /// <returns></returns>
+        public bool SetGroupNickName(string groupname, string nickname)
+        {
+            groupname = groupname.Trim().ToLower();
+            PermissionGroup group = GetGroupByName(groupname);
+
+            if (group != null)
+            {
+                lock (_obj)
+                {
+                    group.NickName = nickname;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Changes the group name to something new.
+        /// All players that were in the group will have the new group name assigned.
+        /// </summary>
+        /// <param name="groupname"></param>
+        /// <param name="newname"></param>
+        /// <returns></returns>
+        public bool ChangeGroupName(string groupname, string newname)
+        {
+            groupname = groupname.Trim().ToLower();
+            PermissionGroup group = GetGroupByName(groupname);
+
+            if (group != null)
+            {
+                int id = group.UniqueID;
+                lock (_obj)
+                {
+                    foreach (var x in _handler.PermissionPlayers)
+                    {
+                        string gname = x.Groups.FirstOrDefault(y => GetUniqueID(y.Trim().ToLower()) == id);
+                        if (!string.IsNullOrEmpty(gname))
+                        {
+                            x.Groups.Remove(gname);
+                            x.Groups.Add(newname);
                         }
                     }
 
