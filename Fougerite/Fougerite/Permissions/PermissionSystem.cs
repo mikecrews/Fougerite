@@ -152,19 +152,19 @@ namespace Fougerite.Permissions
                     emptygroups.Add(new PermissionGroup()
                     {
                         GroupName = "Default",
-                        GroupPermissions = new List<string>() {"DoNotDeleteTheDefaultGroup", "Something"},
+                        GroupPermissions = new List<string>() {"donotdeletethedefaultgroup", "something"},
                         NickName = "Default nick name"
                     });
                     emptygroups.Add(new PermissionGroup()
                     {
                         GroupName = "Group1", 
-                        GroupPermissions = new List<string>() {"GroupPermission1"},
+                        GroupPermissions = new List<string>() {"grouppermission1"},
                         NickName = "Nice nick name"
                     });
                     emptygroups.Add(new PermissionGroup()
                     {
                         GroupName = "Group2",
-                        GroupPermissions = new List<string>() {"GroupPermission2.gar", "GroupPermission2.something"},
+                        GroupPermissions = new List<string>() {"grouppermission2.gar", "grouppermission2.something"},
                         NickName = "SomeNickname"
                     });
 
@@ -188,7 +188,7 @@ namespace Fougerite.Permissions
                     {
                         SteamID = 76562531000,
                         Permissions = new List<string>()
-                            {"*", "Permission1", "Permission2.something", "Permission3"},
+                            {"*", "permission", "permission2.something", "permission3"},
                         Groups = new List<string>() {"Group1"}
                     });
 
