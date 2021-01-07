@@ -10,7 +10,7 @@ namespace Fougerite.Permissions
         private string _groupname;
         
         [JsonProperty]
-        public int UniqueID
+        public uint UniqueID
         {
             get;
             set;
@@ -45,18 +45,14 @@ namespace Fougerite.Permissions
         }
         
         /// <summary>
-        /// Gets the unique identifier of a string based on MD5.
+        /// Gets the unique identifier of a string.
         /// This is used for group names.
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        private int GetUniqueID(string value)
+        private uint GetUniqueID(string value)
         {
-            using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
-            {
-                var hashed = md5.ComputeHash(Encoding.UTF8.GetBytes(value));
-                return BitConverter.ToInt32(hashed, 0);
-            }
+            return SuperFastHashUInt16Hack.Hash(Encoding.UTF8.GetBytes(value));
         }
     }
 }

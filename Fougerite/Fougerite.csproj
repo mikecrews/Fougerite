@@ -166,6 +166,7 @@
     <Compile Include="Fougerite\FougeriteEx.cs" />
     <Compile Include="Fougerite\SQLiteConnector.cs" />
     <Compile Include="Fougerite\Stopper.cs" />
+    <Compile Include="Fougerite\SuperFastHash.cs" />
     <Compile Include="Global.cs" />
     <Compile Include="Fougerite\ChatString.cs" />
     <Compile Include="Fougerite\Logger.cs" />
