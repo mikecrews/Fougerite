@@ -22,6 +22,7 @@
             <e p="BeltUseEvent.cs" t="Include" />
             <e p="BowShootEvent.cs" t="Include" />
             <e p="BPUseEvent.cs" t="Include" />
+            <e p="ConsoleEvent.cs" t="Include" />
             <e p="CraftingEvent.cs" t="Include" />
             <e p="DeathEvent.cs" t="Include" />
             <e p="DecayEvent.cs" t="Include" />

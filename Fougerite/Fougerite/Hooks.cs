@@ -60,7 +60,12 @@ namespace Fougerite
         /// <summary>
         /// This delegate runs when a console message is received.
         /// </summary>
+        [System.Obsolete("Use OnConsoleReceivedWithCancel", false)]
         public static event ConsoleHandlerDelegate OnConsoleReceived;
+        /// <summary>
+        /// This delegate runs when a console message is received.
+        /// </summary>
+        public static event ConsoleHandlerWithCancelDelegate OnConsoleReceivedWithCancel;
         /// <summary>
         /// This delegate runs when a door is opened/closed.
         /// </summary>
@@ -456,6 +461,243 @@ namespace Fougerite
             if (sw.Elapsed.TotalSeconds > 0) Logger.LogSpeed("ChatEvent Speed: " + Math.Round(sw.Elapsed.TotalSeconds) + " secs");
         }
 
+        public static bool HandleRunCommand(ref ConsoleSystem.Arg arg, bool bWantReply = true)
+        {
+            // Run the plugin handles first.
+            bool success = ConsoleReceived(ref arg);
+            if (!success)
+            {
+                return false;
+            }
+            
+            bool flag;
+            Type[] typeArray = ConsoleSystem.FindTypes(arg.Class);
+            if (typeArray.Length == 0)
+            {
+                return false;
+            }
+
+            if (bWantReply)
+            {
+                string[] textArray1 = new string[] {"command ", arg.Class, ".", arg.Function, " was executed"};
+                arg.ReplyWith(string.Concat(textArray1));
+            }
+
+            Type[] typeArray2 = typeArray;
+            int index = 0;
+            while (true)
+            {
+                if (index >= typeArray2.Length)
+                {
+                    if (bWantReply)
+                    {
+                        arg.ReplyWith("Command not found: " + arg.Class + "." + arg.Function);
+                    }
+
+                    return false;
+                }
+
+                Type type = typeArray2[index];
+                MethodInfo method = type.GetMethod(arg.Function);
+                if ((method != null) && method.IsStatic)
+                {
+                    if (!arg.CheckPermissions(method.GetCustomAttributes(true)))
+                    {
+                        if (bWantReply)
+                        {
+                            arg.ReplyWith("No permission: " + arg.Class + "." + arg.Function);
+                        }
+
+                        return false;
+                    }
+
+                    ConsoleSystem.Arg[] argArray1 = new ConsoleSystem.Arg[] {arg};
+                    object[] parameters = argArray1;
+                    try
+                    {
+                        method.Invoke(null, parameters);
+                    }
+                    catch (Exception exception)
+                    {
+                        string[] textArray2 = new string[]
+                            {"Error: ", arg.Class, ".", arg.Function, " - ", exception.Message};
+                        Debug.LogWarning(string.Concat(textArray2));
+                        string[] textArray3 = new string[]
+                            {"Error: ", arg.Class, ".", arg.Function, " - ", exception.Message};
+                        arg.ReplyWith(string.Concat(textArray3));
+                        flag = false;
+                        break;
+                    }
+
+                    arg = parameters[0] as ConsoleSystem.Arg;
+                    return true;
+                }
+
+                FieldInfo field = type.GetField(arg.Function);
+                if ((field != null) && field.IsStatic)
+                {
+                    if (!arg.CheckPermissions(field.GetCustomAttributes(true)))
+                    {
+                        if (bWantReply)
+                        {
+                            arg.ReplyWith("No permission: " + arg.Class + "." + arg.Function);
+                        }
+
+                        return false;
+                    }
+
+                    Type fieldType = field.FieldType;
+                    if (!arg.HasArgs(1))
+                    {
+                        if (bWantReply)
+                        {
+                            string[] textArray5 = new string[]
+                            {
+                                arg.Class, ".", arg.Function, ": ", Facepunch.Utility.String.QuoteSafe(field.GetValue(null).ToString()),
+                                " (", fieldType.Name, ")"
+                            };
+                            arg.ReplyWith(string.Concat(textArray5));
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            string str = field.GetValue(null).ToString();
+                            if (ReferenceEquals(fieldType, typeof(float)))
+                            {
+                                field.SetValue(null, float.Parse(arg.Args[0]));
+                            }
+
+                            if (ReferenceEquals(fieldType, typeof(int)))
+                            {
+                                field.SetValue(null, int.Parse(arg.Args[0]));
+                            }
+
+                            if (ReferenceEquals(fieldType, typeof(string)))
+                            {
+                                field.SetValue(null, arg.Args[0]);
+                            }
+
+                            if (ReferenceEquals(fieldType, typeof(bool)))
+                            {
+                                field.SetValue(null, bool.Parse(arg.Args[0]));
+                            }
+
+                            if (bWantReply)
+                            {
+                                string[] textArray4 = new string[10];
+                                textArray4[0] = arg.Class;
+                                textArray4[1] = ".";
+                                textArray4[2] = arg.Function;
+                                textArray4[3] = ": changed ";
+                                textArray4[4] = Facepunch.Utility.String.QuoteSafe(str);
+                                textArray4[5] = " to ";
+                                textArray4[6] = Facepunch.Utility.String.QuoteSafe(field.GetValue(null).ToString());
+                                textArray4[7] = " (";
+                                textArray4[8] = fieldType.Name;
+                                textArray4[9] = ")";
+                                arg.ReplyWith(string.Concat(textArray4));
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            if (bWantReply)
+                            {
+                                arg.ReplyWith("error setting value: " + arg.Class + "." + arg.Function);
+                            }
+                        }
+                    }
+
+                    return true;
+                }
+
+                PropertyInfo property = type.GetProperty(arg.Function);
+                if ((property != null) && (property.GetGetMethod().IsStatic && property.GetSetMethod().IsStatic))
+                {
+                    if (!arg.CheckPermissions(property.GetCustomAttributes(true)))
+                    {
+                        if (bWantReply)
+                        {
+                            arg.ReplyWith("No permission: " + arg.Class + "." + arg.Function);
+                        }
+
+                        return false;
+                    }
+
+                    Type propertyType = property.PropertyType;
+                    if (!arg.HasArgs(1))
+                    {
+                        if (bWantReply)
+                        {
+                            string[] textArray7 = new string[]
+                            {
+                                arg.Class, ".", arg.Function, ": ",
+                                Facepunch.Utility.String.QuoteSafe(property.GetValue(null, null).ToString()), " (", propertyType.Name, ")"
+                            };
+                            arg.ReplyWith(string.Concat(textArray7));
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            string str = property.GetValue(null, null).ToString();
+                            if (ReferenceEquals(propertyType, typeof(float)))
+                            {
+                                property.SetValue(null, float.Parse(arg.Args[0]), null);
+                            }
+
+                            if (ReferenceEquals(propertyType, typeof(int)))
+                            {
+                                property.SetValue(null, int.Parse(arg.Args[0]), null);
+                            }
+
+                            if (ReferenceEquals(propertyType, typeof(string)))
+                            {
+                                property.SetValue(null, arg.Args[0], null);
+                            }
+
+                            if (ReferenceEquals(propertyType, typeof(bool)))
+                            {
+                                property.SetValue(null, bool.Parse(arg.Args[0]), null);
+                            }
+
+                            if (bWantReply)
+                            {
+                                string[] textArray6 = new string[10];
+                                textArray6[0] = arg.Class;
+                                textArray6[1] = ".";
+                                textArray6[2] = arg.Function;
+                                textArray6[3] = ": changed ";
+                                textArray6[4] = Facepunch.Utility.String.QuoteSafe(str);
+                                textArray6[5] = " to ";
+                                textArray6[6] = Facepunch.Utility.String.QuoteSafe(property.GetValue(null, null).ToString());
+                                textArray6[7] = " (";
+                                textArray6[8] = propertyType.Name;
+                                textArray6[9] = ")";
+                                arg.ReplyWith(string.Concat(textArray6));
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            if (bWantReply)
+                            {
+                                arg.ReplyWith("error setting value: " + arg.Class + "." + arg.Function);
+                            }
+                        }
+                    }
+
+                    return true;
+                }
+
+                index++;
+            }
+
+            return flag;
+        }
+
+
         public static bool ConsoleReceived(ref ConsoleSystem.Arg a)
         {
             Stopwatch sw = null;
@@ -483,6 +725,67 @@ namespace Fougerite
 
             string logmsg = string.Format("[ConsoleReceived] userid={0} adminRights={1} command={2}.{3} args={4}", userid, adminRights.ToString(), Class, Function, (a.HasArgs(1) ? a.ArgsStr : "none"));
             Logger.LogDebug(logmsg);
+            
+            string clss = Class.ToLower();
+            string func = Function.ToLower();
+            string data;
+            if (!string.IsNullOrEmpty(func))
+            {
+                data = clss + "." + func;
+            }
+            else
+            {
+                data = clss;
+            }
+                
+            // Allow server console to execute anything
+            if (!external && Server.GetServer().ConsoleCommandCancelList.Contains(data))
+            {
+                a.ReplyWith("This console command is globally restricted!");
+                return false;
+            }
+
+            // We have a player
+            if (UID > 0)
+            {
+                Fougerite.Player player = Fougerite.Server.GetServer().FindPlayer(UID);
+                if (player != null && player.ConsoleCommandCancelList.Contains(data))
+                {
+                    a.ReplyWith("This console command is restricted for you!");
+                    player.Message("This console command is restricted for you!");
+                    return false;
+                }
+            }
+            
+            if (OnConsoleReceived != null)
+            {
+                try
+                {
+                    OnConsoleReceived(ref a, external);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError("ConsoleReceived Error: " + ex);
+                }
+            }
+
+            if (OnConsoleReceivedWithCancel != null)
+            {
+                ConsoleEvent ce = new ConsoleEvent();
+                try
+                {
+                    OnConsoleReceivedWithCancel(ref a, external, ce);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError("OnConsoleReceivedWithCancel Error: " + ex);
+                }
+
+                if (ce.Cancelled)
+                {
+                    return false;
+                }
+            }
 
             if (Class.Equals("fougerite", ic) && Function.Equals("reload", ic))
             {
@@ -576,49 +879,6 @@ namespace Fougerite
                 {
                     Logger.showRPC = !Logger.showRPC;
                     a.ReplyWith("Toggled rpctracer to:" + Logger.showRPC);
-                }
-            }
-            
-            string clss = Class.ToLower();
-            string func = Function.ToLower();
-            string data;
-            if (!string.IsNullOrEmpty(func))
-            {
-                data = clss + "." + func;
-            }
-            else
-            {
-                data = clss;
-            }
-                
-            // Allow server console to execute anything
-            if (!external && Server.GetServer().ConsoleCommandCancelList.Contains(data))
-            {
-                a.ReplyWith("This console command is globally restricted!");
-                return false;
-            }
-
-            // We have a player
-            if (UID > 0)
-            {
-                Fougerite.Player player = Fougerite.Server.GetServer().FindPlayer(UID);
-                if (player != null && player.ConsoleCommandCancelList.Contains(data))
-                {
-                    a.ReplyWith("This console command is restricted for you!");
-                    player.Message("This console command is restricted for you!");
-                    return false;
-                }
-            }
-            
-            if (OnConsoleReceived != null)
-            {
-                try
-                {
-                    OnConsoleReceived(ref a, external);
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError("ConsoleReceived Error: " + ex);
                 }
             }
 
@@ -3837,6 +4097,9 @@ namespace Fougerite
             OnConsoleReceived = delegate (ref ConsoleSystem.Arg param0, bool param1)
             {
             };
+            OnConsoleReceivedWithCancel = delegate (ref ConsoleSystem.Arg param0, bool param1, ConsoleEvent ce)
+            {
+            };
             OnBlueprintUse = delegate (Fougerite.Player param0, BPUseEvent param1)
             {
             };
@@ -4868,6 +5131,7 @@ namespace Fougerite
         public delegate void CommandRawHandlerDelegate(ref ConsoleSystem.Arg arg);
         public delegate void ConnectionHandlerDelegate(Fougerite.Player player);
         public delegate void ConsoleHandlerDelegate(ref ConsoleSystem.Arg arg, bool external);
+        public delegate void ConsoleHandlerWithCancelDelegate(ref ConsoleSystem.Arg arg, bool external, ConsoleEvent ce);
         public delegate void DisconnectionHandlerDelegate(Fougerite.Player player);
         public delegate void DoorOpenHandlerDelegate(Fougerite.Player player, DoorEvent de);
         public delegate void EntityDecayDelegate(DecayEvent de);
