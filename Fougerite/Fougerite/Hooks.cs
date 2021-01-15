@@ -32,6 +32,7 @@ namespace Fougerite
     {
         public static System.Collections.Generic.List<object> decayList = new System.Collections.Generic.List<object>();
         public static Hashtable talkerTimers = new Hashtable();
+        public static bool ServerInitialized = false;
 
         /// <summary>
         /// This delegate runs when all plugins loaded. (First time)
@@ -466,12 +467,27 @@ namespace Fougerite
         public static bool HandleRunCommand(ref ConsoleSystem.Arg arg, bool bWantReply = true)
         {
             // Run the plugin handles first.
-            bool success = ConsoleReceived(ref arg);
-            if (!success)
+            try
             {
-                return false;
+                // What a crappy way from Garry Newfag to call COMMANDS to initialize classes.
+                if (ServerInitialized)
+                {
+                    bool success = ConsoleReceived(ref arg);
+                    if (!success)
+                    {
+                        return false;
+                    }
+                }
             }
-            
+            catch (Exception ex)
+            {
+                if (ServerInitialized)
+                {
+                    Logger.LogError("HandleCommand Error: " + ex);
+                }
+                // Ignore, should never happen.
+            }
+
             bool flag;
             Type[] typeArray = ConsoleSystem.FindTypes(arg.Class);
             if (typeArray.Length == 0)
@@ -3559,6 +3575,7 @@ namespace Fougerite
             ServerSaveHandler h = go.AddComponent<ServerSaveHandler>();
             UnityEngine.Object.DontDestroyOnLoad(go);
             World.GetWorld().ServerSaveHandler = h;
+            ServerInitialized = true;
             Logger.Log("Server Initialized.");
             UnityEngine.Object.Destroy(init.gameObject);
             yield break;
