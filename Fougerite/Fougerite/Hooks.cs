@@ -386,11 +386,13 @@ namespace Fougerite
                 Array.Copy(args, 1, cargs, 0, cargs.Length);
                 if (OnCommand != null)
                 {
-                    if (player.CommandCancelList.Contains(command))
+                    // If player has *, restrict all commands.
+                    if (player.CommandCancelList.Contains("*") || player.CommandCancelList.Contains(command))
                     {
                         player.Message("You cannot execute " + command + " at the moment!");
                         return;
                     }
+                    
                     try
                     {
                         OnCommand(player, command, cargs);
