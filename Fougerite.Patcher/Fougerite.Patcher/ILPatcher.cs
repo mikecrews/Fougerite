@@ -1545,17 +1545,24 @@ namespace Fougerite.Patcher
         {
             TypeDefinition type = rustAssembly.MainModule.GetType("ConsoleSystem");
             MethodDefinition orig = type.GetMethod("RunCommand");
-            MethodDefinition method = hooksClass.GetMethod("ConsoleReceived");
+            MethodDefinition method = hooksClass.GetMethod("HandleRunCommand");
 
             this.CloneMethod(orig);
             ILProcessor iLProcessor = orig.Body.GetILProcessor();
-            for (int i = 0; i < 8; i++)
+            iLProcessor.Body.Instructions.Clear();
+            iLProcessor.Body.ExceptionHandlers.Clear();
+            iLProcessor.Body.Variables.Clear();
+            iLProcessor.Body.Instructions.Add(Instruction.Create(OpCodes.Ldarg_0));
+            iLProcessor.Body.Instructions.Add(Instruction.Create(OpCodes.Ldarg_1));
+            iLProcessor.Body.Instructions.Add(Instruction.Create(OpCodes.Call, rustAssembly.MainModule.Import(method)));
+            iLProcessor.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
+            /*for (int i = 0; i < 8; i++)
             {
                 iLProcessor.Remove(orig.Body.Instructions[11]);
             }
             iLProcessor.InsertBefore(orig.Body.Instructions[11], Instruction.Create(OpCodes.Ret));
             iLProcessor.InsertBefore(orig.Body.Instructions[11], Instruction.Create(OpCodes.Call, rustAssembly.MainModule.Import(method)));
-            iLProcessor.InsertBefore(orig.Body.Instructions[11], Instruction.Create(OpCodes.Ldarg_0));
+            iLProcessor.InsertBefore(orig.Body.Instructions[11], Instruction.Create(OpCodes.Ldarg_0));*/
         }
 
         private void DoorSharing()

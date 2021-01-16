@@ -120,18 +120,14 @@ namespace Fougerite.Permissions
         }
 
         /// <summary>
-        /// Gets the unique identifier of a string based on MD5.
+        /// Gets the unique identifier of a string.
         /// This is used for group names.
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public int GetUniqueID(string value)
+        public uint GetUniqueID(string value)
         {
-            using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
-            {
-                var hashed = md5.ComputeHash(Encoding.UTF8.GetBytes(value));
-                return BitConverter.ToInt32(hashed, 0);
-            }
+            return SuperFastHashUInt16Hack.Hash(Encoding.UTF8.GetBytes(value));
         }
 
         /// <summary>
@@ -353,7 +349,7 @@ namespace Fougerite.Permissions
         public PermissionGroup GetGroupByName(string groupname)
         {
             groupname = groupname.Trim().ToLower();
-            int uniqueid = GetUniqueID(groupname);
+            uint uniqueid = GetUniqueID(groupname);
             lock (_obj)
             {
                 return _handler.PermissionGroups.FirstOrDefault(x => x.UniqueID == uniqueid);
@@ -433,7 +429,7 @@ namespace Fougerite.Permissions
                 return false;
             }
             
-            int id = GetUniqueID(groupname);
+            uint id = GetUniqueID(groupname);
             
             return permissionplayer.Groups.Any(x => GetUniqueID(x.Trim().ToLower()) == id);
         }
@@ -674,7 +670,7 @@ namespace Fougerite.Permissions
                 PermissionPlayer player = _handler.PermissionPlayers.SingleOrDefault(x => x.SteamID == steamid);
                 if (player != null)
                 {
-                    int id = GetUniqueID(groupname);
+                    uint id = GetUniqueID(groupname);
                     string gname = player.Groups.FirstOrDefault(y => GetUniqueID(y.Trim().ToLower()) == id);
                     if (string.IsNullOrEmpty(gname))
                     {
@@ -702,7 +698,7 @@ namespace Fougerite.Permissions
                 PermissionPlayer player = _handler.PermissionPlayers.SingleOrDefault(x => x.SteamID == steamid);
                 if (player != null)
                 {
-                    int id = GetUniqueID(groupname);
+                    uint id = GetUniqueID(groupname);
                     string gname = player.Groups.FirstOrDefault(y => GetUniqueID(y.Trim().ToLower()) == id);
                     if (!string.IsNullOrEmpty(gname))
                     {
@@ -769,7 +765,7 @@ namespace Fougerite.Permissions
                 lock (_obj)
                 {
                     _handler.PermissionGroups.Remove(group);
-                    int id = GetUniqueID(groupname);
+                    uint id = GetUniqueID(groupname);
                     
                     foreach (var x in _handler.PermissionPlayers)
                     {
@@ -901,7 +897,7 @@ namespace Fougerite.Permissions
 
             if (group != null)
             {
-                int id = group.UniqueID;
+                uint id = group.UniqueID;
                 lock (_obj)
                 {
                     foreach (var x in _handler.PermissionPlayers)
