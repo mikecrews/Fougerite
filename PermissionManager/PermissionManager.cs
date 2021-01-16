@@ -65,9 +65,16 @@ namespace PermissionManager
                         return;
                     }
 
+                    #region PermissionPlayerHandling
                     string secondcommand = args[0];
                     switch (secondcommand)
                     {
+                        case "reload":
+                        {
+                            permissionSystem.ReloadPermissions();
+                            player.MessageFrom("PermissionSystem", "Done!");
+                            break;
+                        }
                         case "newplayer":
                         {
                             if (args.Length <= 1)
@@ -76,7 +83,7 @@ namespace PermissionManager
                                 return;
                             }
                             
-                            string playername = string.Join(" ", Merge(args, 1));
+                            string playername = string.Join(" ", Merge(args, 1)).Trim();
                             Fougerite.Player pl = Fougerite.Server.GetServer().FindPlayer(playername);
                             if (pl != null)
                             {
@@ -90,18 +97,26 @@ namespace PermissionManager
 
                             break;
                         }
-                        case "deleteplayer":
+                        case "delplayer":
                         {
                             if (args.Length <= 1)
                             {
-                                player.MessageFrom("PermissionSystem", "/pem deleteplayer playername");
+                                player.MessageFrom("PermissionSystem", "/pem delplayer playername");
                                 return;
                             }
                             
-                            string playername = string.Join(" ", Merge(args, 1));
+                            string playername = string.Join(" ", Merge(args, 1)).Trim();
                             Fougerite.Player pl = Fougerite.Server.GetServer().FindPlayer(playername);
                             if (pl != null)
                             {
+                                // If target has pem.admin, we need rcon permissions.
+                                if (permissionSystem.PlayerHasPermission(pl, "pem.admin") && !player.Admin)
+                                {
+                                    player.MessageFrom("PermissionSystem", "You need RCON access to modify a PermissionManager.");
+                                    player.MessageFrom("PermissionSystem", "Ensure you have also created the PermissionPlayer.");
+                                    return;
+                                }
+                                
                                 permissionSystem.RemovePermissionPlayer(pl);
                                 player.MessageFrom("PermissionSystem", "Permissions can now be assigned to this player!");
                             }
@@ -112,19 +127,27 @@ namespace PermissionManager
 
                             break;
                         }
-                        case "deleteofflplayer":
+                        case "delofflplayer":
                         {
                             if (args.Length <= 1)
                             {
-                                player.MessageFrom("PermissionSystem", "/pem deleteofflplayer steamid");
+                                player.MessageFrom("PermissionSystem", "/pem delofflplayer steamid");
                                 return;
                             }
                             
-                            string steamid = string.Join("", Merge(args, 1));
+                            string steamid = string.Join("", Merge(args, 1)).Trim();
                             ulong uid;
                             if (!ulong.TryParse(steamid, out uid))
                             {
                                 player.MessageFrom("PermissionSystem", "Use a steamid (Yes, sorry)");
+                                return;
+                            }
+                            
+                            // If target has pem.admin, we need rcon permissions.
+                            if (permissionSystem.PlayerHasPermission(uid, "pem.admin") && !player.Admin)
+                            {
+                                player.MessageFrom("PermissionSystem", "You need RCON access to modify a PermissionManager.");
+                                player.MessageFrom("PermissionSystem", "Ensure you have also created the PermissionPlayer.");
                                 return;
                             }
 
@@ -149,6 +172,13 @@ namespace PermissionManager
                                 Fougerite.Player pl = Fougerite.Server.GetServer().FindPlayer(target);
                                 if (pl != null)
                                 {
+                                    // If target has pem.admin, we need rcon permissions.
+                                    if (permissionSystem.PlayerHasPermission(pl, "pem.admin") && !player.Admin)
+                                    {
+                                        player.MessageFrom("PermissionSystem", "You need RCON access to modify a PermissionManager.");
+                                        player.MessageFrom("PermissionSystem", "Ensure you have also created the PermissionPlayer.");
+                                        return;
+                                    }
                                     bool success = permissionSystem.AddPermission(pl, permission);
                                     player.MessageFrom("PermissionSystem", success ? "Added for " + pl.Name + " permission: " + permission 
                                         : "User doesn't exist!");
@@ -160,6 +190,13 @@ namespace PermissionManager
                             }
                             else
                             {
+                                // If target has pem.admin, we need rcon permissions.
+                                if (permissionSystem.PlayerHasPermission(uid, "pem.admin") && !player.Admin)
+                                {
+                                    player.MessageFrom("PermissionSystem", "You need RCON access to modify a PermissionManager.");
+                                    player.MessageFrom("PermissionSystem", "Ensure you have also created the PermissionPlayer.");
+                                    return;
+                                }
                                 bool success = permissionSystem.AddPermission(uid, permission);
                                 player.MessageFrom("PermissionSystem", success ? "Added to " + uid + " permission: " + permission 
                                     : "User doesn't exist!");
@@ -182,6 +219,13 @@ namespace PermissionManager
                                 Fougerite.Player pl = Fougerite.Server.GetServer().FindPlayer(target);
                                 if (pl != null)
                                 {
+                                    // If target has pem.admin, we need rcon permissions.
+                                    if (permissionSystem.PlayerHasPermission(pl, "pem.admin") && !player.Admin)
+                                    {
+                                        player.MessageFrom("PermissionSystem", "You need RCON access to modify a PermissionManager.");
+                                        player.MessageFrom("PermissionSystem", "Ensure you have also created the PermissionPlayer.");
+                                        return;
+                                    }
                                     bool success = permissionSystem.RemovePermission(pl, permission);
                                     player.MessageFrom("PermissionSystem", success ? "Removed for " + pl.Name + " permission: " + permission 
                                         : "User doesn't exist!");
@@ -193,6 +237,13 @@ namespace PermissionManager
                             }
                             else
                             {
+                                // If target has pem.admin, we need rcon permissions.
+                                if (permissionSystem.PlayerHasPermission(uid, "pem.admin") && !player.Admin)
+                                {
+                                    player.MessageFrom("PermissionSystem", "You need RCON access to modify a PermissionManager.");
+                                    player.MessageFrom("PermissionSystem", "Ensure you have also created the PermissionPlayer.");
+                                    return;
+                                }
                                 bool success = permissionSystem.RemovePermission(uid, permission);
                                 player.MessageFrom("PermissionSystem", success ? "Removed for " + uid + " permission: " + permission 
                                     : "User doesn't exist!");
@@ -245,8 +296,141 @@ namespace PermissionManager
                             }
                             break;
                         }
-                        
+                        case "addtogroup":
+                        {
+                            if (args.Length < 3)
+                            {
+                                player.MessageFrom("PermissionSystem", "/pem addtogroup steamid/ groupname");
+                                return;
+                            }
+                            
+                            string target = args[1];
+                            string group = string.Join(" ",Merge(args, 2)).Trim();
+                            ulong uid;
+                            if (!ulong.TryParse(target, out uid))
+                            {
+                                Fougerite.Player pl = Fougerite.Server.GetServer().FindPlayer(target);
+                                if (pl != null)
+                                {
+                                    var ppl = permissionSystem.GetPlayerBySteamID(pl);
+                                    if (ppl != null)
+                                    {
+                                        // If target has pem.admin, we need rcon permissions.
+                                        if (permissionSystem.PlayerHasPermission(pl, "pem.admin") && !player.Admin)
+                                        {
+                                            player.MessageFrom("PermissionSystem", "You need RCON access to modify a PermissionManager.");
+                                            player.MessageFrom("PermissionSystem", "Ensure you have also created the PermissionPlayer.");
+                                            return;
+                                        }
+                                        bool success = permissionSystem
+                                            .AddGroupToPlayer(ppl.SteamID, group);
+                                        player.MessageFrom("PermissionSystem", success ? "Added " + pl.Name + " to " + group 
+                                            : "Group doesn't exist!");
+                                    }
+                                    else
+                                    {
+                                        player.MessageFrom("PermissionSystem", target + " is not a permissionplayer!");
+                                    }
+                                }
+                                else
+                                {
+                                    player.MessageFrom("PermissionSystem", target + " not found!");
+                                }
+                            }
+                            else
+                            {
+                                var ppl = permissionSystem.GetPlayerBySteamID(uid);
+                                if (ppl != null)
+                                {
+                                    // If target has pem.admin, we need rcon permissions.
+                                    if (permissionSystem.PlayerHasPermission(ppl.SteamID, "pem.admin") && !player.Admin)
+                                    {
+                                        player.MessageFrom("PermissionSystem", "You need RCON access to modify a PermissionManager.");
+                                        player.MessageFrom("PermissionSystem", "Ensure you have also created the PermissionPlayer.");
+                                        return;
+                                    }
+                                    bool success = PermissionSystem.GetPermissionSystem()
+                                        .AddGroupToPlayer(ppl.SteamID, group);
+                                    player.MessageFrom("PermissionSystem", success ? "Added " + uid + " to " + group 
+                                        : "Group doesn't exist!");
+                                }
+                                else
+                                {
+                                    player.MessageFrom("PermissionSystem", target + " is not a permissionplayer!");
+                                }
+                            }
+                            break;
+                        }
+                        case "delfromgroup":
+                        {
+                            if (args.Length < 3)
+                            {
+                                player.MessageFrom("PermissionSystem", "/pem delfromgroup steamid/name groupname");
+                                return;
+                            }
+                            
+                            string target = args[1];
+                            string group = string.Join(" ",Merge(args, 2)).Trim();
+                            ulong uid;
+                            if (!ulong.TryParse(target, out uid))
+                            {
+                                Fougerite.Player pl = Fougerite.Server.GetServer().FindPlayer(target);
+                                if (pl != null)
+                                {
+                                    var ppl = permissionSystem.GetPlayerBySteamID(pl);
+                                    if (ppl != null)
+                                    {
+                                        // If target has pem.admin, we need rcon permissions.
+                                        if (permissionSystem.PlayerHasPermission(pl, "pem.admin") && !player.Admin)
+                                        {
+                                            player.MessageFrom("PermissionSystem", "You need RCON access to modify a PermissionManager.");
+                                            player.MessageFrom("PermissionSystem", "Ensure you have also created the PermissionPlayer.");
+                                            return;
+                                        }
+                                        
+                                        bool success = permissionSystem
+                                            .RemoveGroupFromPlayer(ppl.SteamID, group);
+                                        player.MessageFrom("PermissionSystem", success ? "Removed " + pl.Name + " from " + group 
+                                            : "Group doesn't exist or user doesn't have It!");
+                                    }
+                                    else
+                                    {
+                                        player.MessageFrom("PermissionSystem", target + " is not a permissionplayer!");
+                                    }
+                                }
+                                else
+                                {
+                                    player.MessageFrom("PermissionSystem", target + " not found!");
+                                }
+                            }
+                            else
+                            {
+                                var ppl = permissionSystem.GetPlayerBySteamID(uid);
+                                if (ppl != null)
+                                {
+                                    // If target has pem.admin, we need rcon permissions.
+                                    if (permissionSystem.PlayerHasPermission(ppl.SteamID, "pem.admin") && !player.Admin)
+                                    {
+                                        player.MessageFrom("PermissionSystem", "You need RCON access to modify a PermissionManager.");
+                                        player.MessageFrom("PermissionSystem", "Ensure you have also created the PermissionPlayer.");
+                                        return;
+                                    }
+                                    
+                                    bool success = permissionSystem
+                                        .RemoveGroupFromPlayer(ppl.SteamID, group);
+                                    player.MessageFrom("PermissionSystem", success ? "Removed " + uid + " from " + group 
+                                        : "Group doesn't exist user doesn't have It!");
+                                }
+                                else
+                                {
+                                    player.MessageFrom("PermissionSystem", target + " is not a permissionplayer!");
+                                }
+                            }
+                            break;
+                        }
+
                     }
+                    #endregion
 
                     break;
                 }
