@@ -1,4 +1,6 @@
-﻿namespace RustPP.Commands
+﻿using Fougerite.Permissions;
+
+namespace RustPP.Commands
 {
     using Fougerite;
     using RustPP;
@@ -31,6 +33,8 @@
                     {
                         if (command.AdminRestricted)
                         {
+                            bool haspermission = PermissionSystem.GetPermissionSystem()
+                                .PlayerHasPermission(pl.UID, command.AdminFlags);
                             if (command.AdminFlags == "RCON")
                             {
                                 if (arg.argUser.admin)
@@ -42,9 +46,9 @@
                                     pl.MessageFrom(RustPP.Core.Name, "You need RCON access to be able to use this command.");
                                 }
                             }
-                            else if (Administrator.IsAdmin(arg.argUser.userID))
+                            else if (haspermission || Administrator.IsAdmin(arg.argUser.userID))
                             {
-                                if (Administrator.GetAdmin(arg.argUser.userID).HasPermission(command.AdminFlags))
+                                if (haspermission || Administrator.GetAdmin(arg.argUser.userID).HasPermission(command.AdminFlags))
                                 {
                                     command.Execute(ref arg, ref chatArgs);
                                 }
